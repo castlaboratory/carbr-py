@@ -1,5 +1,15 @@
 # Novidades
 
+## Em desenvolvimento
+
+- `car_check()` passa a considerar a sobreposição com terras indígenas (Funai) e unidades de
+  conservação (CNUC/MMA): mais de 1% da área em terra indígena ou em unidade de proteção integral
+  leva o resultado a `"attention"`; unidade de uso sustentável é informada na nota. Colunas novas:
+  `indigenous_share`, `strict_protection_share`, `sustainable_use_share` e `protected_area`.
+- `car_quality()` e `car_quality_summary()` trazem essas parcelas, os nomes das áreas e as
+  contagens por município.
+- Servidor MCP: as mesmas informações em `imoveis_no_ponto`, `municipio` e `verificar_imoveis`.
+
 ## 0.4.0
 
 - `car_quality()` e `car_quality_summary()`: indicadores de qualidade do cadastro, por imóvel e por

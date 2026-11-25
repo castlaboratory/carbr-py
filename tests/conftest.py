@@ -76,6 +76,13 @@ def release(tmp_path):
         "overlap_count": [1, 0, 0, 1, 0],
         "overlap_share": [1.0, 0.0, 0.0, 0.04, 0.0],
         "outside_share": [0.0, 0.0, 0.6, 0.0, 0.0],
+        # O 2º imóvel fica em terra indígena; o 3º, em parte num parque; o 6º, inteiro numa APA.
+        "indigenous_share": [0.0, 0.8, 0.0, 0.0, 0.0],
+        "strict_protection_share": [0.0, 0.0, 0.3, 0.0, 0.0],
+        "sustainable_use_share": [0.0, 0.0, 0.0, 1.0, 0.0],
+        "indigenous_land": [None, "Terra Teste", None, None, None],
+        "conservation_unit": [None, None, "Parque Teste", "APA Teste", None],
+        "conservation_category": [None, None, "Parque", "Área de Proteção Ambiental", None],
     })
     (tmp_path / "quality").mkdir()
     (tmp_path / "quality-municipalities").mkdir()
@@ -88,7 +95,13 @@ def release(tmp_path):
                 count(*) FILTER (overlap_share > 0.5) AS overlapping_half,
                 sum(p.area_ha * overlap_share) AS overlap_ha,
                 count(*) FILTER (outside_share > 0.5) AS outside_half,
-                sum(p.area_ha * outside_share) AS outside_ha
+                sum(p.area_ha * outside_share) AS outside_ha,
+                count(*) FILTER (indigenous_share > 0.01) AS indigenous,
+                sum(p.area_ha * indigenous_share) AS indigenous_ha,
+                count(*) FILTER (strict_protection_share > 0.01) AS strict_protection,
+                sum(p.area_ha * strict_protection_share) AS strict_protection_ha,
+                count(*) FILTER (sustainable_use_share > 0.01) AS sustainable_use,
+                sum(p.area_ha * sustainable_use_share) AS sustainable_use_ha
               FROM quality q JOIN props p USING (property_code) GROUP BY ALL) TO '{f_qm}' (FORMAT parquet)""")
     (tmp_path / "catalog.json").write_text(json.dumps({
         "version": "2026-01-01",

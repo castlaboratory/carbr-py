@@ -56,6 +56,10 @@ Ao responder com estes dados:
 - Qualidade (`qualidade`): `overlap_share` é a parcela da área do imóvel sobreposta a outros
   imóveis do estado; `outside_share`, a parcela fora do município declarado. Sobreposição não é
   sinônimo de disputa: inclui imóvel declarado duas vezes e lote dentro de assentamento.
+- Áreas protegidas: `indigenous_share` é a parcela do imóvel dentro de terras indígenas (Funai);
+  `strict_protection_share` e `sustainable_use_share`, dentro de unidades de conservação de
+  proteção integral e de uso sustentável (CNUC/MMA). Uso sustentável não é irregularidade: áreas
+  de proteção ambiental (APA) e reservas particulares (RPPN) admitem imóveis privados.
 """
 
 STAGE_LABELS = {
@@ -187,11 +191,15 @@ def _town_quality(uf: str, code: int) -> dict[str, Any] | None:
     return r
 
 
+_AREAS = ["indigenous_share", "strict_protection_share", "sustainable_use_share",
+          "indigenous_land", "conservation_unit", "conservation_category"]
+
+
 def _property_quality(df: pd.DataFrame) -> pd.DataFrame:
     """Indicadores de qualidade dos imóveis de `df` (vazio se a publicação não os traz)."""
     import warnings
 
-    columns = ["property_code", "overlap_count", "overlap_share", "outside_share"]
+    columns = ["property_code", "overlap_count", "overlap_share", "outside_share", *_AREAS]
     parts = []
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -211,7 +219,7 @@ def imoveis_no_ponto(lon: float, lat: float) -> dict[str, Any]:
     df = df.merge(_property_quality(df), on="property_code", how="left")
     columns = ["property_code", "municipality", "state", "status", "condition", "etapa",
                "property_type", "size_class", "area_ha", "fiscal_modules", "created_at",
-               "overlap_count", "overlap_share", "outside_share"]
+               "overlap_count", "overlap_share", "outside_share", *_AREAS]
     return _envelope(imoveis=_records(df[columns]), quantidade=len(df), sobreposicao=len(df) > 1)
 
 
@@ -219,9 +227,11 @@ def verificar_imoveis(codigos: list[str]) -> dict[str, Any]:
     """Verifica uma lista de códigos de imóvel do CAR (até 200 por chamada).
 
     Para cada código: o que consta na camada pública e um resultado (`check`): ok
-    (ativo, sem notificação pendente), attention (pendente ou notificado sem resposta),
-    blocked (cancelado ou suspenso), not_found, invalid. A classificação é do carbr, não
-    uma regra oficial, e não cobre embargos nem sobreposição com áreas protegidas.
+    (ativo, sem notificação pendente), attention (pendente, notificado sem resposta, ou com
+    mais de 1% da área sobre terra indígena ou unidade de conservação de proteção integral),
+    blocked (cancelado ou suspenso), not_found, invalid. `note` traz o motivo e
+    `protected_area`, os nomes das áreas sobrepostas. A classificação é do carbr, não uma
+    regra oficial, e não cobre embargos.
     """
     if len(codigos) > MAX_ROWS:
         raise ValueError(f"No máximo {MAX_ROWS} códigos por chamada; divida a lista.")

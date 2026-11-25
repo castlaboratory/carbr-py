@@ -399,6 +399,53 @@ def _verdict(row) -> tuple[str, str]:
     return "ok", "Cadastro ativo, sem notificação pendente."
 
 
+def _check_quality(uf: str, part: pd.DataFrame) -> pd.DataFrame:
+    """Sobreposição com áreas protegidas dos imóveis de `part` (vazio se a publicação não traz)."""
+    columns = ["property_code", "indigenous_share", "strict_protection_share", "sustainable_use_share",
+               "indigenous_land", "conservation_unit", "conservation_category"]
+    if not len(part):
+        return pd.DataFrame(columns=columns)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        quality = car_quality(uf, municipality=sorted({int(c) for c in part["municipality_code"]}))
+    return quality[quality["property_code"].isin(part["property_code"])][columns]
+
+
+_PROTECTED = ["indigenous_share", "strict_protection_share", "sustainable_use_share", "protected_area"]
+_SHARE_MIN = 0.01       # abaixo de 1% da área, a sobreposição é ruído de limite
+
+
+def _percent(share: float) -> str:
+    return "toda a área" if share >= 0.995 else f"{max(1, round(100 * share))}% da área"
+
+
+def _protected(row, check: str, note: str) -> tuple[str, str, str | None]:
+    """Acrescenta ao resultado a sobreposição com terra indígena e unidade de conservação."""
+    def share(key):
+        value = row.get(key)
+        return float(value) if pd.notna(value) else 0.0
+
+    ti, strict, sustainable = (share(k) for k in _PROTECTED[:3])
+    unit, category = row.get("conservation_unit"), row.get("conservation_category")
+    extra, names = [], []
+    if ti >= _SHARE_MIN:
+        extra.append(f"Sobrepõe terra indígena ({row.get('indigenous_land')}) em {_percent(ti)}.")
+        names.append(row.get("indigenous_land"))
+    if strict >= _SHARE_MIN:
+        extra.append(f"Sobrepõe unidade de conservação de proteção integral ({unit}) em {_percent(strict)}.")
+        names.append(unit)
+    elif sustainable >= _SHARE_MIN:
+        names.append(unit)
+        if check != "blocked":
+            extra.append(f"Fica em unidade de conservação de uso sustentável ({category}: {unit}), "
+                         f"em {_percent(sustainable)}.")
+    alert = ti >= _SHARE_MIN or strict >= _SHARE_MIN
+    if alert and check == "ok":
+        check, note = "attention", ""
+    area = "; ".join(str(n) for n in names if isinstance(n, str)) or None
+    return check, " ".join([note, *extra]).strip(), area
+
+
 def car_check(code: str | Iterable[str]) -> pd.DataFrame:
     """Verificar vários imóveis de uma vez.
 
@@ -411,16 +458,20 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
     oficial:
 
     - ``"ok"``: cadastro ativo, sem notificação pendente;
-    - ``"attention"``: cadastro pendente, ou analisado com notificação ainda
-      sem resposta do declarante;
+    - ``"attention"``: cadastro pendente, analisado com notificação ainda
+      sem resposta do declarante, ou com mais de 1% da área sobre terra
+      indígena ou unidade de conservação de proteção integral;
     - ``"blocked"``: cadastro cancelado ou suspenso;
     - ``"not_found"``: código que não está na publicação (pode ter sido
       cadastrado depois da última atualização);
     - ``"invalid"``: texto que não tem o formato de um código do CAR.
 
-    A verificação diz só o que a camada pública traz. Não cobre embargos,
-    sobreposição com terras indígenas ou unidades de conservação, nem
-    substitui a consulta oficial ao Sicar.
+    A sobreposição com terras indígenas (Funai) e unidades de conservação
+    (CNUC/MMA) é calculada na publicação, pelos perímetros declarados. Estar
+    em unidade de uso sustentável é informado na nota, mas não muda o
+    resultado: áreas de proteção ambiental e reservas particulares admitem
+    imóveis privados. A verificação não cobre embargos nem outras áreas
+    públicas, e não substitui a consulta oficial ao Sicar.
 
     Parameters
     ----------
@@ -435,12 +486,15 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
         ``"analysing"``, ``"notified"``, ``"answered"``, ``"done"`` ou
         ``"cancelled"``), ``status``, ``condition``, ``property_type``,
         ``size_class``, ``area_ha``, ``fiscal_modules``, ``state``,
-        ``municipality`` e ``created_at``.
+        ``municipality``, ``created_at`` e, para os imóveis não cancelados,
+        ``indigenous_share``, ``strict_protection_share``,
+        ``sustainable_use_share`` (parcelas da área, de 0 a 1) e
+        ``protected_area`` (os nomes das áreas sobrepostas).
     """
     codes = list(dict.fromkeys(str(c).strip().upper() for c in _as_list(code) if str(c).strip()))
     columns = ["property_code", "status", "condition", "property_type", "size_class",
                "area_ha", "fiscal_modules", "state", "municipality", "created_at"]
-    order = ["property_code", "check", "note", "stage", *columns[1:]]
+    order = ["property_code", "check", "note", "stage", *columns[1:], *_PROTECTED]
     if not codes:
         return pd.DataFrame(columns=order)
     valid = [c for c in codes if _CODE.match(c)]
@@ -465,45 +519,58 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
                 more = _collect(rel, [f"property_code IN ({', '.join('?' * len(left))})"], left, True)
                 if more is not None and len(more):
                     part = pd.concat([part, more], ignore_index=True)
-            parts.append(part[columns])
+            parts.append(part[columns].merge(_check_quality(uf, part), on="property_code", how="left"))
     found = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=columns)
     found["property_code"] = found["property_code"].astype(object)
     out = pd.DataFrame({"property_code": pd.Series(codes, dtype=object)}).merge(
         found, on="property_code", how="left")
     out["stage"] = out["condition"].map(_stage)
-    checks, notes = [], []
+    checks, notes, areas = [], [], []
     for _, row in out.iterrows():
         if not _CODE.match(row["property_code"]):
             verdict = ("invalid", _NOTES["invalid"])
         elif not isinstance(row["state"], str):
             verdict = ("not_found", _NOTES["not_found"])
         else:
-            verdict = _verdict(row)
+            verdict = _protected(row, *_verdict(row))
         checks.append(verdict[0])
         notes.append(verdict[1])
-    out["check"], out["note"] = checks, notes
-    return out[order]
+        areas.append(verdict[2] if len(verdict) > 2 else None)
+    out["check"], out["note"], out["protected_area"] = checks, notes, pd.Series(areas, dtype=object)
+    return out.reindex(columns=order)
 
 
-_QUALITY = ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share"]
+_QUALITY = ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share",
+            "indigenous_share", "strict_protection_share", "sustainable_use_share",
+            "indigenous_land", "conservation_unit", "conservation_category"]
 _QUALITY_SUMMARY = ["state", "municipality_code", "municipality", "properties", "overlapping",
-                    "overlapping_half", "overlap_ha", "outside_half", "outside_ha"]
+                    "overlapping_half", "overlap_ha", "outside_half", "outside_ha",
+                    "indigenous", "indigenous_ha", "strict_protection", "strict_protection_ha",
+                    "sustainable_use", "sustainable_use_ha"]
 
 
 def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
     """Indicadores de qualidade por imóvel.
 
-    Dois sinais de inconsistência do cadastro, calculados na publicação para cada imóvel
-    não cancelado:
+    Sinais calculados na publicação para cada imóvel não cancelado:
 
     - ``overlap_count`` e ``overlap_share``: com quantos outros imóveis do estado ele
       divide área, e que parcela da área dele está sobreposta (a soma das interseções
       com cada vizinho, limitada a 1);
     - ``outside_share``: que parcela da área fica fora do município declarado, pela
-      malha municipal do IBGE.
+      malha municipal do IBGE;
+    - ``indigenous_share``: que parcela fica dentro de terras indígenas (Funai, todas
+      as fases do processo), com o nome da principal em ``indigenous_land``;
+    - ``strict_protection_share`` e ``sustainable_use_share``: que parcela fica dentro
+      de unidades de conservação de proteção integral e de uso sustentável (CNUC/MMA),
+      com o nome e a categoria da principal em ``conservation_unit`` e
+      ``conservation_category`` (a de proteção integral, se houver).
 
-    Sobreposição não é sinônimo de disputa: inclui imóvel declarado duas vezes e lote
-    dentro de assentamento. A comparação é só entre imóveis do mesmo estado.
+    Sobreposição entre imóveis não é sinônimo de disputa: inclui imóvel declarado duas
+    vezes e lote dentro de assentamento; a comparação é só entre imóveis do mesmo
+    estado. Estar em unidade de uso sustentável também não é irregularidade: áreas de
+    proteção ambiental (APA) e reservas particulares (RPPN) admitem imóveis privados.
+    As edições das camadas estão em ``source.protected_areas`` no catálogo.
 
     Parameters
     ----------
@@ -515,8 +582,9 @@ def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
     Returns
     -------
     pandas.DataFrame
-        ``property_code``, ``municipality_code``, ``overlap_count``, ``overlap_share`` e
-        ``outside_share``. Junte a :func:`car_properties` por ``property_code``.
+        ``property_code``, ``municipality_code`` e os indicadores acima. Junte a
+        :func:`car_properties` por ``property_code``. As colunas de terras indígenas e
+        unidades de conservação vêm vazias se a publicação ainda não as traz.
     """
     cat = _client.catalog_json()
     if cat is None:
@@ -530,14 +598,14 @@ def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
         warnings.warn("This publication has no quality indicators; returning an empty result.",
                       _client.CarWarning, stacklevel=2)
         return pd.DataFrame(columns=_QUALITY)
-    rel = _client.con().read_parquet(files)
+    rel = _client.con().read_parquet(files, union_by_name=True)
     where, params = [], []
     if municipality is not None:
         codes = _municipality_codes(municipality, states)
         where.append(f"municipality_code IN ({', '.join('?' * len(codes))})")
         params.extend(codes)
     out = _collect(rel, where, params, True)
-    return pd.DataFrame(columns=_QUALITY) if out is None else out[_QUALITY]
+    return pd.DataFrame(columns=_QUALITY) if out is None else out.reindex(columns=_QUALITY)
 
 
 def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFrame:
@@ -547,6 +615,9 @@ def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFram
     acima de 1% (``overlapping``) e de 50% da área (``overlapping_half``), os hectares
     sobrepostos (``overlap_ha``, somando os dois lados de cada par), e quantos imóveis
     (``outside_half``) e hectares (``outside_ha``) ficam fora do município declarado.
+    E, para terras indígenas (``indigenous``), unidades de proteção integral
+    (``strict_protection``) e de uso sustentável (``sustainable_use``), quantos imóveis
+    têm mais de 1% da área dentro delas e quantos hectares (``*_ha``).
     Arquivos pequenos, guardados em cache.
 
     Parameters
@@ -569,7 +640,7 @@ def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFram
     files = [_client.cached_file(cat, p) for p in paths]
     if any(f is None for f in files):
         return empty
-    rel = _client.con().read_parquet([str(f) for f in files])  # noqa: F841
+    rel = _client.con().read_parquet([str(f) for f in files], union_by_name=True)  # noqa: F841
     out = _client.con().execute("SELECT * FROM rel ORDER BY municipality_code").df()
     names = car_municipalities(states)[["municipality_code", "municipality"]]
-    return out.merge(names, on="municipality_code", how="left")[_QUALITY_SUMMARY]
+    return out.merge(names, on="municipality_code", how="left").reindex(columns=_QUALITY_SUMMARY)

@@ -161,13 +161,34 @@ def test_check_classifies_a_batch_of_codes(release):
     assert "cancelado" in out["note"].iloc[2]
     assert list(out.columns) == ["property_code", "check", "note", "stage", "status", "condition",
                                  "property_type", "size_class", "area_ha", "fiscal_modules", "state",
-                                 "municipality", "created_at"]
+                                 "municipality", "created_at", "indigenous_share",
+                                 "strict_protection_share", "sustainable_use_share", "protected_area"]
     assert len(carbr.car_check([])) == 0
+
+
+def test_check_flags_indigenous_lands_and_strict_protection_units(release):
+    out = carbr.car_check([f"PE-2611101-{n:032X}" for n in (1, 2, 3, 6)]).set_index("property_code")
+    clean, indigenous, park, apa = (out.loc[f"PE-2611101-{n:032X}"] for n in (1, 2, 3, 6))
+    assert clean["check"] == "ok" and clean["protected_area"] is None and clean["indigenous_share"] == 0
+    # An active property on an indigenous land stops being "ok".
+    assert indigenous["check"] == "attention" and indigenous["indigenous_share"] == 0.8
+    assert "terra indígena (Terra Teste) em 80% da área" in indigenous["note"]
+    assert indigenous["protected_area"] == "Terra Teste"
+    # A pending one keeps its own reason and gains the park.
+    assert park["check"] == "attention" and park["note"].startswith("Cadastro pendente.")
+    assert "proteção integral (Parque Teste) em 30% da área" in park["note"]
+    # Sustainable use is reported, but does not change the result.
+    assert apa["check"] == "ok" and apa["sustainable_use_share"] == 1.0
+    assert "uso sustentável (Área de Proteção Ambiental: APA Teste), em toda a área" in apa["note"]
+    assert apa["protected_area"] == "APA Teste"
 
 
 def test_quality_indicators_per_property_and_per_municipality(release):
     q = carbr.car_quality("PE")
-    assert list(q.columns) == ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share"]
+    assert list(q.columns) == ["property_code", "municipality_code", "overlap_count", "overlap_share",
+                               "outside_share", "indigenous_share", "strict_protection_share",
+                               "sustainable_use_share", "indigenous_land", "conservation_unit",
+                               "conservation_category"]
     assert len(q) == 5
     town = carbr.car_quality("PE", municipality="petrolina")
     assert len(town) == 4 and town["overlap_count"].sum() == 2
@@ -180,4 +201,6 @@ def test_quality_indicators_per_property_and_per_municipality(release):
     assert list(s["overlapping"]) == [2, 0] and list(s["overlapping_half"]) == [1, 0]
     assert s["overlap_ha"].iloc[0] == pytest.approx(250.0)
     assert list(s["outside_half"]) == [1, 0]
+    assert list(s["indigenous"]) == [1, 0] and s["indigenous_ha"].iloc[0] == pytest.approx(16.0)
+    assert list(s["strict_protection"]) == [1, 0] and list(s["sustainable_use"]) == [1, 0]
     assert len(carbr.car_quality_summary()) == 2
