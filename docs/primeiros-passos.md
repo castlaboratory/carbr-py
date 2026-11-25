@@ -232,11 +232,19 @@ petrolina[["property_code", "status", "area_ha", "fiscal_modules", "size_class"]
 
 Sobre uma imagem de satélite, o cadastro mostra a ocupação do município: os lotes
 estreitos dos perímetros irrigados junto ao rio São Francisco, ao sul e a leste, e os
-imóveis maiores da caatinga, ao norte. O fundo vem do pacote `contextily`.
+imóveis maiores da caatinga, ao norte. O limite municipal é da malha do IBGE, lida
+direto da API de malhas; o fundo vem do pacote `contextily`.
 
 ```python
 import contextily as ctx
+import geopandas as gpd
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+
+boundary = gpd.read_file(
+    "https://servicodados.ibge.gov.br/api/v3/malhas/municipios/2611101"
+    "?formato=application/vnd.geo%2Bjson&qualidade=maxima"
+).set_crs(4674, allow_override=True)
 
 valid = petrolina[petrolina["geometry_valid"] & (petrolina["status"] != "cancelled")]
 valid = valid.sort_values("area_ha", ascending=False)
@@ -246,19 +254,23 @@ labels = {"small": "Pequeno (até 4 módulos fiscais)", "medium": "Médio (4 a 1
 
 ax = valid.plot(color=valid["size_class"].map(colors), edgecolor=valid["size_class"].map(colors),
                 linewidth=0.3, alpha=0.55, figsize=(7, 7.6))
+boundary.boundary.plot(ax=ax, color="white", linewidth=1.6)
+ax.margins(0.03)
 ctx.add_basemap(ax, crs=valid.crs, source=ctx.providers.Esri.WorldImagery, zoom=10,
-                attribution="Fonte: SFB/Sicar, via carbr. Imagem: Esri World Imagery.",
+                attribution="Fontes: SFB/Sicar, via carbr; malha municipal do IBGE. Imagem: Esri World Imagery.",
                 attribution_size=6)
-ax.legend(handles=[Patch(color=colors[k], label=labels[k]) for k in colors],
-          loc="upper right", fontsize=8, framealpha=0.9)
+handles = [Patch(color=colors[k], label=labels[k]) for k in colors]
+handles.append(Line2D([], [], color="white", linewidth=1.6, label="Limite municipal"))
+ax.legend(handles=handles, facecolor="#2b2b2b", labelcolor="white",
+          loc="upper right", fontsize=8, framealpha=0.85)
 ax.set_title(f"Imóveis declarados no CAR em Petrolina, Pernambuco\n"
              f"{len(valid)} cadastros ativos ou pendentes, por porte", loc="left", fontsize=11)
 ax.set_axis_off()
 
-fig("petrolina")
+fig("mapa-petrolina")
 ```
 
-![petrolina](assets/petrolina.png)
+![mapa-petrolina](assets/mapa-petrolina.png)
 
 Os filtros combinam. Só os imóveis grandes com cadastro ativo:
 
