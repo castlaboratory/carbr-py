@@ -6,8 +6,8 @@ version: 0.1.1
 date-released: 2026-11-25
 license: MIT
 doi: 10.5281/zenodo.24532757
-repository-code: "https://github.com/StrategicProjects/carbr-py"
-url: "https://strategicprojects.github.io/carbr-py/"
+repository-code: "https://github.com/castlaboratory/carbr-py"
+url: "https://castlaboratory.github.io/carbr-py/"
 keywords:
   - CAR
   - Sicar

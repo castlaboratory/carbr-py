@@ -41,11 +41,11 @@ dev = ["pytest>=7", "geopandas>=1.0", "ruff>=0.6", "build>=1.0"]
 docs = ["mkdocs-material>=9.5", "mkdocstrings[python]>=0.26", "matplotlib>=3.5", "geopandas>=1.0", "contextily>=1.5"]
 
 [project.urls]
-Homepage = "https://strategicprojects.github.io/carbr-py/"
-Documentation = "https://strategicprojects.github.io/carbr-py/"
-Repository = "https://github.com/StrategicProjects/carbr-py"
-Issues = "https://github.com/StrategicProjects/carbr-py/issues"
-Changelog = "https://github.com/StrategicProjects/carbr-py/blob/main/NEWS.md"
+Homepage = "https://castlaboratory.github.io/carbr-py/"
+Documentation = "https://castlaboratory.github.io/carbr-py/"
+Repository = "https://github.com/castlaboratory/carbr-py"
+Issues = "https://github.com/castlaboratory/carbr-py/issues"
+Changelog = "https://github.com/castlaboratory/carbr-py/blob/main/NEWS.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/carbr"]

@@ -1,6 +1,6 @@
-# carbr <img src="https://raw.githubusercontent.com/StrategicProjects/carbr-py/main/docs/assets/logo.svg" align="right" height="139" alt="" />
+# carbr <img src="https://raw.githubusercontent.com/castlaboratory/carbr-py/main/docs/assets/logo.svg" align="right" height="139" alt="" />
 
-[![CI](https://github.com/StrategicProjects/carbr-py/actions/workflows/ci.yml/badge.svg)](https://github.com/StrategicProjects/carbr-py/actions/workflows/ci.yml)
+[![CI](https://github.com/castlaboratory/carbr-py/actions/workflows/ci.yml/badge.svg)](https://github.com/castlaboratory/carbr-py/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/carbr.svg)](https://pypi.org/project/carbr/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24532757.svg)](https://doi.org/10.5281/zenodo.24532757)
@@ -13,7 +13,7 @@ consulta — por UF, município, situação, porte, retângulo, ponto ou código
 imóvel — transfere só os trechos do arquivo de que precisa, e não passa pelos
 servidores do Sicar.
 
-**Documentação:** <https://strategicprojects.github.io/carbr-py/>
+**Documentação:** <https://castlaboratory.github.io/carbr-py/>
 
 ## Instalação
 
@@ -47,9 +47,9 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 
 ## Guias
 
-- [Primeiros passos](https://strategicprojects.github.io/carbr-py/primeiros-passos/)
-- [Inconsistências do cadastro](https://strategicprojects.github.io/carbr-py/inconsistencias/): sobreposições, imóveis fora do município, área declarada maior que o território.
-- [Onde a análise está parada](https://strategicprojects.github.io/carbr-py/fila-da-analise/): as etapas da análise por UF e quem aguarda resposta à notificação.
+- [Primeiros passos](https://castlaboratory.github.io/carbr-py/primeiros-passos/)
+- [Inconsistências do cadastro](https://castlaboratory.github.io/carbr-py/inconsistencias/): sobreposições, imóveis fora do município, área declarada maior que o território.
+- [Onde a análise está parada](https://castlaboratory.github.io/carbr-py/fila-da-analise/): as etapas da análise por UF e quem aguarda resposta à notificação.
 
 ## Os dados
 
@@ -72,7 +72,7 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 - **Endereço:** o padrão é um bucket público; `carbr.set_base_url()` ou a variável `CAR_URL`
   apontam para um espelho compatível com S3 ou para uma pasta local.
 
-As mesmas funções existem em R: [carbr-r](https://github.com/StrategicProjects/carbr-r).
+As mesmas funções existem em R: [carbr-r](https://github.com/castlaboratory/carbr-r).
 
 ## Como citar
 

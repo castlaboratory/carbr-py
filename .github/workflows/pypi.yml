@@ -1,6 +1,6 @@
 # Publishes carbr to PyPI via trusted publishing (OIDC, no token).
 # Runs on tags v* (e.g. v0.1.0) or manually. Register once on pypi.org
-# (Publishing -> pending publisher): owner StrategicProjects, repository
+# (Publishing -> pending publisher): owner castlaboratory, repository
 # carbr-py, workflow pypi.yml, environment pypi. Do not rename this file.
 name: pypi
 

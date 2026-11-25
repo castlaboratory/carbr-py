@@ -69,7 +69,7 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 - **Endereço:** o padrão é um bucket público; `carbr.set_base_url()` ou a variável `CAR_URL`
   apontam para um espelho compatível com S3 ou para uma pasta local.
 
-As mesmas funções existem em R: [carbr-r](https://github.com/StrategicProjects/carbr-r).
+As mesmas funções existem em R: [carbr-r](https://github.com/castlaboratory/carbr-r).
 
 ## Como citar
 
