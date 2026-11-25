@@ -1,9 +1,10 @@
 # Novidades
 
-## Em desenvolvimento
+## 0.4.0
 
 - `car_quality()` e `car_quality_summary()`: indicadores de qualidade do cadastro, por imóvel e por
   município (sobreposição com outros imóveis e área fora do município declarado).
+- Servidor MCP: `municipio` e `imoveis_no_ponto` passam a trazer os indicadores de qualidade.
 
 ## 0.3.0
 
