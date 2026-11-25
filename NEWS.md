@@ -1,5 +1,10 @@
 # Novidades
 
+## 0.1.3
+
+- Júlia Nascimento Barreto entra na lista de autores. Sem mudança no código.
+- README com o endereço da página de consulta no navegador.
+
 ## 0.1.2
 
 - O repositório e o site mudaram para a organização `castlaboratory`.
