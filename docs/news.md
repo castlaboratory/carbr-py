@@ -1,5 +1,12 @@
 # Novidades
 
+## 0.1.2
+
+- O repositório e o site mudaram para a organização `castlaboratory`.
+- Endereço padrão dos dados: `car.castlab.org`.
+- README com o DOI do Zenodo e o aviso sobre a base normativa dos dados.
+- O catálogo é relido quando um arquivo é atualizado na publicação.
+
 ## 0.1.1
 
 - Metadados de citação (`CITATION.cff`), para o arquivamento no Zenodo. Sem mudança no código.
