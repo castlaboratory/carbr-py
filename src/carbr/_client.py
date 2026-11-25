@@ -160,15 +160,25 @@ def _sha256(path: Path) -> str:
 
 
 def cached_file(cat: dict, path: str) -> Path | None:
-    """Path to a verified local copy of a small catalogue file."""
-    entry = next((f for f in cat["files"] if f["path"] == path), None)
-    if entry is None:
-        raise CarError(f"{path} is not in the catalogue.")
+    """Path to a verified local copy of a small catalogue file.
+
+    The publication is updated in place. When a file no longer matches the
+    SHA-256 of a catalogue read from the cache, the catalogue is read again
+    and the file is checked against the fresh one.
+    """
+
+    def sha_of(cat: dict) -> str:
+        entry = next((f for f in cat["files"] if f["path"] == path), None)
+        if entry is None:
+            raise CarError(f"{path} is not in the catalogue.")
+        return entry["sha256"]
+
+    sha256 = sha_of(cat)
     base = base_url()
     if not is_remote(base):
         return Path(base) / path
     dest = cache_dir() / cat["version"] / path
-    if dest.exists() and _sha256(dest) == entry["sha256"]:
+    if dest.exists() and _sha256(dest) == sha256:
         return dest
     raw = fetch(path)
     if raw is None:
@@ -176,12 +186,17 @@ def cached_file(cat: dict, path: str) -> Path | None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_name(dest.name + ".tmp")
     tmp.write_bytes(raw)
-    if _sha256(tmp) != entry["sha256"]:
-        tmp.unlink()
-        raise IntegrityError(
-            f"{path} does not match the SHA-256 in the catalogue. The publication "
-            "may be in progress; try again in a few minutes."
-        )
+    if _sha256(tmp) != sha256:
+        fresh = catalog_json(refresh=True)
+        if fresh is None or _sha256(tmp) != sha_of(fresh):
+            tmp.unlink()
+            raise IntegrityError(
+                f"{path} does not match the SHA-256 in the catalogue. The publication "
+                "may be in progress; try again in a few minutes."
+            )
+        cat = fresh
+        dest = cache_dir() / cat["version"] / path
+        dest.parent.mkdir(parents=True, exist_ok=True)
     tmp.replace(dest)
     # Files of other catalogue versions are superseded.
     for other in cache_dir().iterdir():

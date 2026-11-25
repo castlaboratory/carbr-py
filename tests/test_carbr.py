@@ -94,3 +94,48 @@ def test_missing_publication_warns_and_returns_the_empty_schema(tmp_path):
     with pytest.warns(carbr.CarWarning):
         assert len(carbr.car_catalog()) == 0
     carbr.set_base_url(None)
+
+
+def test_file_updated_in_place_is_accepted_after_rereading_the_catalogue(release, tmp_path, monkeypatch):
+    import hashlib
+    import json
+    import shutil
+    from urllib.parse import unquote
+
+    import duckdb
+
+    from carbr import _client
+
+    cache = tmp_path / "cache"
+    monkeypatch.setenv("CAR_CACHE_DIR", str(cache))
+    monkeypatch.setattr(_client, "_MAX_TRIES", 1)
+
+    class Response:
+        def __init__(self, file):
+            self.status_code, self.content = 200, file.read_bytes()
+
+    def get(url, **kwargs):
+        return Response(release / unquote(url.removeprefix("https://car.test/current/")))
+
+    monkeypatch.setattr(_client.requests, "get", get)
+    carbr.set_base_url("https://car.test/current")
+    assert list(carbr.car_municipalities("PE")["properties"]) == [4, 2]
+
+    # The publication changes: new file, new catalogue; the cached catalogue is stale.
+    f_mun = release / "municipalities" / "state=PE.parquet"
+    duckdb.connect().execute(
+        f"COPY (SELECT * REPLACE (properties + 1 AS properties) FROM read_parquet('{f_mun}')) "
+        f"TO '{f_mun}.new' (FORMAT parquet)"
+    )
+    shutil.move(f"{f_mun}.new", f_mun)
+    cat = json.loads((release / "catalog.json").read_text())
+    cat["files"][1]["sha256"] = hashlib.sha256(f_mun.read_bytes()).hexdigest()
+    (release / "catalog.json").write_text(json.dumps(cat))
+    shutil.rmtree(cache / "2026-01-01")
+    assert list(carbr.car_municipalities("PE")["properties"]) == [5, 3]
+
+    # A file that matches no catalogue is still refused.
+    f_mun.write_bytes(bytes(range(10)))
+    shutil.rmtree(cache / "2026-01-01")
+    with pytest.raises(carbr.IntegrityError):
+        carbr.car_municipalities("PE")
