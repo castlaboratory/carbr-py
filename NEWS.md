@@ -1,6 +1,6 @@
 # Novidades
 
-## Em desenvolvimento
+## 0.5.0
 
 - `car_check()` passa a considerar a sobreposição com terras indígenas (Funai) e unidades de
   conservação (CNUC/MMA): mais de 1% da área em terra indígena ou em unidade de proteção integral
