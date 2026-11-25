@@ -15,7 +15,7 @@ servidores do Sicar.
 ## Instalação
 
 ```bash
-pip install "carbr[geo] @ git+https://github.com/StrategicProjects/carbr-py"
+pip install "carbr[geo]"
 ```
 
 Sem o extra `geo`, a geometria vem em WKB e `car_at()` não está disponível.
