@@ -49,6 +49,86 @@ dtype: int64
 23    SC      437300                 134                          0
 ```
 
+## O país inteiro: sobreposição e imóveis fora do município
+
+Dois sinais são calculados na publicação para cada imóvel não cancelado, e ficam
+prontos para consulta: a parcela da área sobreposta a outros imóveis do estado e a
+parcela que fica fora do município declarado. `car_quality_summary()` traz o resumo
+por município; somando por UF:
+
+```python
+quality = carbr.car_quality_summary()
+by_state = quality.groupby("state")[["properties", "overlapping_half", "outside_half"]].sum()
+by_state["share_overlapping"] = (100 * by_state["overlapping_half"] / by_state["properties"]).round(1)
+by_state["share_outside"] = (100 * by_state["outside_half"] / by_state["properties"]).round(2)
+total = by_state["properties"].sum()
+print(f"{100 * by_state['overlapping_half'].sum() / total:.0f}% dos imóveis com mais da metade da área sobreposta;",
+      f"{by_state['outside_half'].sum()} com mais da metade fora do município")
+
+by_state.sort_values("share_overlapping", ascending=False).head(10)
+```
+
+```text
+25% dos imóveis com mais da metade da área sobreposta; 117303 com mais da metade fora do município
+       properties  overlapping_half  outside_half  share_overlapping  share_outside
+state                                                                              
+DF          20826             15830            10               76.0           0.05
+AC          57680             36265           294               62.9           0.51
+RR          27139             16801           215               61.9           0.79
+AP          16906              9983           192               59.1           1.14
+MA         414258            238954          8819               57.7           2.13
+MT         206064             97781          3397               47.5           1.65
+AM          95521             44325           780               46.4           0.82
+PA         345391            157621          2513               45.6           0.73
+RO         188779             75054          1790               39.8           0.95
+AL         141643             55653          3422               39.3           2.42
+```
+
+A diferença entre os estados é grande:
+
+```python
+UFS = {"11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA", "16": "AP", "17": "TO", "21": "MA",
+       "22": "PI", "23": "CE", "24": "RN", "25": "PB", "26": "PE", "27": "AL", "28": "SE", "29": "BA",
+       "31": "MG", "32": "ES", "33": "RJ", "35": "SP", "41": "PR", "42": "SC", "43": "RS", "50": "MS",
+       "51": "MT", "52": "GO", "53": "DF"}
+states = ibge_mesh("paises/BR?intrarregiao=UF&")
+states["state"] = states["codarea"].map(UFS)
+states = states.merge(by_state.reset_index(), on="state", how="left")
+
+ax = states.plot(column="share_overlapping", cmap="OrRd", vmin=0, edgecolor="white", linewidth=0.3,
+                 figsize=(7, 6.4), legend=True,
+                 legend_kwds={"shrink": 0.5, "label": "Imóveis com mais da metade da área sobreposta (%)"})
+ax.set_title("Sobreposição entre imóveis do CAR, por UF", loc="left")
+ax.set_axis_off()
+
+fig("brasil")
+```
+
+![brasil](assets/brasil.png)
+
+Sobreposição não é sinônimo de disputa: entra na conta o mesmo imóvel declarado duas
+vezes e o lote que fica dentro de um assentamento. É um sinal de onde a análise tem
+mais a conferir. Os municípios com mais casos:
+
+```python
+quality.sort_values("overlapping_half", ascending=False)[
+    ["state", "municipality", "properties", "overlapping_half", "outside_half"]
+].head(6)
+```
+
+```text
+     state        municipality  properties  overlapping_half  outside_half
+5562    DF            Brasília       20826             15830            10
+16      RO         Porto Velho       23819             14018            53
+2639    MG            Januária       12397              9113            90
+500     MA              Caxias       10714              7716           154
+215     PA              Marabá        9638              7454            56
+12      RO  Machadinho D'Oeste        8895              7100            37
+```
+
+`car_quality()` desce ao imóvel. Mais adiante, este guia refaz a conta de um município
+passo a passo, para mostrar de onde os números vêm.
+
 ## O código diz um município, o cadastro diz outro
 
 O código do imóvel traz o município em que ele foi registrado (`UF-0000000-…`). Em
@@ -245,9 +325,9 @@ carbr.car_tbl("PE").filter("size_class = 'small' AND area_ha > 440").aggregate(
 
 ```text
            property_type  properties   area_ha
-0  traditional_community          65  164138.0
-1         rural_property           1     926.0
-2             settlement         432  651693.0
+0             settlement         432  651693.0
+1  traditional_community          65  164138.0
+2         rural_property           1     926.0
 ```
 
 Quem conta "pequenos produtores" pelo porte deve separar o tipo do imóvel

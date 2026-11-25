@@ -386,6 +386,66 @@ INCONSISTENCIAS = [
     ),
     (
         """
+        ## O país inteiro: sobreposição e imóveis fora do município
+
+        Dois sinais são calculados na publicação para cada imóvel não cancelado, e ficam
+        prontos para consulta: a parcela da área sobreposta a outros imóveis do estado e a
+        parcela que fica fora do município declarado. `car_quality_summary()` traz o resumo
+        por município; somando por UF:
+        """,
+        """
+        quality = carbr.car_quality_summary()
+        by_state = quality.groupby("state")[["properties", "overlapping_half", "outside_half"]].sum()
+        by_state["share_overlapping"] = (100 * by_state["overlapping_half"] / by_state["properties"]).round(1)
+        by_state["share_outside"] = (100 * by_state["outside_half"] / by_state["properties"]).round(2)
+        total = by_state["properties"].sum()
+        print(f"{100 * by_state['overlapping_half'].sum() / total:.0f}% dos imóveis com mais da metade da área sobreposta;",
+              f"{by_state['outside_half'].sum()} com mais da metade fora do município")
+
+        by_state.sort_values("share_overlapping", ascending=False).head(10)
+        """,
+    ),
+    (
+        "A diferença entre os estados é grande:",
+        """
+        UFS = {"11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA", "16": "AP", "17": "TO", "21": "MA",
+               "22": "PI", "23": "CE", "24": "RN", "25": "PB", "26": "PE", "27": "AL", "28": "SE", "29": "BA",
+               "31": "MG", "32": "ES", "33": "RJ", "35": "SP", "41": "PR", "42": "SC", "43": "RS", "50": "MS",
+               "51": "MT", "52": "GO", "53": "DF"}
+        states = ibge_mesh("paises/BR?intrarregiao=UF&")
+        states["state"] = states["codarea"].map(UFS)
+        states = states.merge(by_state.reset_index(), on="state", how="left")
+
+        ax = states.plot(column="share_overlapping", cmap="OrRd", vmin=0, edgecolor="white", linewidth=0.3,
+                         figsize=(7, 6.4), legend=True,
+                         legend_kwds={"shrink": 0.5, "label": "Imóveis com mais da metade da área sobreposta (%)"})
+        ax.set_title("Sobreposição entre imóveis do CAR, por UF", loc="left")
+        ax.set_axis_off()
+
+        fig("brasil")
+        """,
+    ),
+    (
+        """
+        Sobreposição não é sinônimo de disputa: entra na conta o mesmo imóvel declarado duas
+        vezes e o lote que fica dentro de um assentamento. É um sinal de onde a análise tem
+        mais a conferir. Os municípios com mais casos:
+        """,
+        """
+        quality.sort_values("overlapping_half", ascending=False)[
+            ["state", "municipality", "properties", "overlapping_half", "outside_half"]
+        ].head(6)
+        """,
+    ),
+    (
+        """
+        `car_quality()` desce ao imóvel. Mais adiante, este guia refaz a conta de um município
+        passo a passo, para mostrar de onde os números vêm.
+        """,
+        None,
+    ),
+    (
+        """
         ## O código diz um município, o cadastro diz outro
 
         O código do imóvel traz o município em que ele foi registrado (`UF-0000000-…`). Em
