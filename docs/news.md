@@ -1,6 +1,6 @@
 # Novidades
 
-## Em desenvolvimento
+## 0.2.0
 
 - `car_check()`: verifica uma lista de códigos de imóvel de uma vez e resume o que consta de cada um
   (`ok`, `attention`, `blocked`, `not_found`, `invalid`).
