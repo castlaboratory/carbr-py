@@ -1,5 +1,9 @@
 # Novidades
 
+## Em desenvolvimento
+
+- Servidor MCP (`carbr-mcp`, extra `mcp`): oito ferramentas de consulta ao CAR para assistentes.
+
 ## 0.2.0
 
 - `car_check()`: verifica uma lista de códigos de imóvel de uma vez e resume o que consta de cada um

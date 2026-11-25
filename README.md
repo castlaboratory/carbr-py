@@ -54,6 +54,15 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 - [Inconsistências do cadastro](https://castlaboratory.github.io/carbr-py/inconsistencias/): sobreposições, imóveis fora do município, área declarada maior que o território.
 - [Onde a análise está parada](https://castlaboratory.github.io/carbr-py/fila-da-analise/): as etapas da análise por UF e quem aguarda resposta à notificação.
 
+## Assistentes
+
+O pacote traz um servidor MCP: um assistente compatível passa a responder perguntas sobre o CAR com os
+dados reais. Veja [Assistentes (MCP)](https://castlaboratory.github.io/carbr-py/assistentes/).
+
+```bash
+uvx --from "carbr[mcp]" carbr-mcp
+```
+
 ## Os dados
 
 - **Origem:** serviço público do Sicar, do Serviço Florestal Brasileiro. O cadastro é
