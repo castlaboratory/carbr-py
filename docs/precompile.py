@@ -446,6 +446,82 @@ INCONSISTENCIAS = [
     ),
     (
         """
+        ## Terras indígenas e unidades de conservação
+
+        O mesmo resumo traz quantos imóveis têm mais de 1% da área dentro de uma terra indígena
+        (camada da Funai, em todas as fases do processo) ou de uma unidade de conservação
+        (Cadastro Nacional de Unidades de Conservação, do MMA). Nas unidades de conservação o
+        grupo importa: as de proteção integral, como parques e estações ecológicas, em regra não
+        admitem imóveis privados; as de uso sustentável incluem as áreas de proteção ambiental
+        (APA) e as reservas particulares (RPPN), onde a propriedade privada é normal.
+        """,
+        """
+        protected = quality.groupby("state")[
+            ["properties", "indigenous", "strict_protection", "sustainable_use"]].sum()
+        protected.sum()
+        """,
+    ),
+    (
+        "",
+        """
+        order = protected[["indigenous", "strict_protection"]].sum(axis=1).sort_values().index
+        ax = protected.loc[order, ["indigenous", "strict_protection"]].rename(
+            columns={"indigenous": "Terra indígena", "strict_protection": "Proteção integral"}
+        ).plot.barh(stacked=True, color=["#c2255c", "#2b8a3e"], figsize=(7, 6.4), width=0.8)
+        ax.set_title("Imóveis do CAR sobre terra indígena ou unidade de proteção integral\\n"
+                     "Imóveis não cancelados com mais de 1% da área dentro dessas áreas",
+                     loc="left", fontsize=10)
+        ax.set_ylabel("")
+        ax.spines[["top", "right"]].set_visible(False)
+
+        fig("protegidas")
+        """,
+    ),
+    (
+        "Os municípios com mais casos, em cada tipo:",
+        """
+        quality.sort_values("indigenous", ascending=False)[
+            ["state", "municipality", "properties", "indigenous", "indigenous_ha"]].head(5)
+        """,
+    ),
+    (
+        "",
+        """
+        quality.sort_values("strict_protection", ascending=False)[
+            ["state", "municipality", "properties", "strict_protection", "strict_protection_ha"]].head(5)
+        """,
+    ),
+    (
+        """
+        Por imóvel, `car_quality()` traz a parcela da área e o nome da terra indígena ou da
+        unidade de conservação. É o que `car_check()` usa na triagem: um cadastro ativo passa de
+        `"ok"` a `"attention"` quando mais de 1% da área está em terra indígena ou em unidade de
+        proteção integral, e a nota diz qual.
+        """,
+        """
+        aguas_belas = carbr.car_quality("PE", municipality="Águas Belas")
+        inside = aguas_belas[aguas_belas["indigenous_share"] > 0.5]
+        inside[["property_code", "indigenous_share", "indigenous_land"]].head(3)
+        """,
+    ),
+    (
+        "",
+        """
+        check = carbr.car_check(inside["property_code"].head(2))
+        for row in check.itertuples():
+            print(row.check, "|", row.note)
+        """,
+    ),
+    (
+        """
+        O sinal vem de perímetros autodeclarados cruzados com limites oficiais, e não é uma
+        conclusão sobre o imóvel: há terras indígenas ainda em estudo, e cadastros anteriores à
+        criação de uma unidade de conservação.
+        """,
+        None,
+    ),
+    (
+        """
         ## O código diz um município, o cadastro diz outro
 
         O código do imóvel traz o município em que ele foi registrado (`UF-0000000-…`). Em
@@ -787,6 +863,73 @@ ANALISE = [
         depende só de o declarante entender o que foi pedido.
         """,
         None,
+    ),
+    (
+        """
+        ## Uma tipologia dos municípios
+
+        As etapas da análise, o porte dos imóveis e a sobreposição entre cadastros variam juntos,
+        e os municípios se parecem em blocos. `car_typology()` resume isso: cada município entra
+        num de cinco grupos, achados por agrupamento (k-médias) sobre sete indicadores do
+        cadastro. Os grupos ficam fixos de uma atualização para a outra, de modo que dá para
+        acompanhar um município mudando de grupo.
+        """,
+        """
+        carbr.car_typology_groups()[["typology_label", "municipalities", "properties", "description"]]
+        """,
+    ),
+    (
+        "O perfil médio de cada grupo mostra de onde vêm os nomes:",
+        """
+        typology = carbr.car_typology()
+        typology.groupby("typology_label")[
+            ["small_share", "large_area_share", "waiting_share", "notified_share",
+             "analysed_share", "overlap_share", "coverage"]].mean().round(2)
+        """,
+    ),
+    (
+        "",
+        """
+        import geopandas as gpd
+        from matplotlib.colors import ListedColormap
+        from matplotlib.patches import Patch
+
+        GROUPS = {
+            "Pequenos imóveis à espera de análise": "#adb5bd",
+            "Grandes imóveis à espera de análise": "#4c6ef5",
+            "Análise avançada": "#37b24d",
+            "Notificados sem resposta": "#f76707",
+            "Muita sobreposição": "#c2255c",
+            "Poucos cadastros": "#f1f3f5",
+        }
+        brazil = gpd.read_file(
+            "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?intrarregiao=municipio"
+            "&formato=application/vnd.geo%2Bjson&qualidade=minima")
+        brazil["municipality_code"] = brazil["codarea"].astype(int)
+        brazil = brazil.merge(typology, on="municipality_code", how="left")
+        brazil["colour"] = brazil["typology_label"].map(GROUPS).fillna("#f1f3f5")
+
+        ax = brazil.plot(color=brazil["colour"], figsize=(7, 7.6), linewidth=0)
+        ax.legend(handles=[Patch(color=c, label=g) for g, c in GROUPS.items()], loc="upper center",
+                  bbox_to_anchor=(0.5, 0.02), ncol=2, frameon=False, fontsize=8)
+        ax.set_title("Tipologia dos municípios pelo perfil do CAR", loc="left")
+        ax.set_axis_off()
+
+        fig("tipologia")
+        """,
+    ),
+    (
+        """
+        O mapa separa situações que pedem respostas diferentes. Onde a análise mal começou, o
+        gargalo é a capacidade do órgão ambiental. Onde os cadastros estão notificados e sem
+        resposta, é o atendimento ao declarante. Onde a sobreposição domina, é a qualidade do
+        que foi declarado. E um estado pode ter mais de uma dessas situações: o grupo mais
+        comum em cada UF,
+        """,
+        """
+        top = typology.groupby("state")["typology_label"].agg(lambda s: s.value_counts().index[0])
+        top.value_counts()
+        """,
     ),
 ]
 

@@ -129,6 +129,93 @@ quality.sort_values("overlapping_half", ascending=False)[
 `car_quality()` desce ao imóvel. Mais adiante, este guia refaz a conta de um município
 passo a passo, para mostrar de onde os números vêm.
 
+## Terras indígenas e unidades de conservação
+
+O mesmo resumo traz quantos imóveis têm mais de 1% da área dentro de uma terra indígena
+(camada da Funai, em todas as fases do processo) ou de uma unidade de conservação
+(Cadastro Nacional de Unidades de Conservação, do MMA). Nas unidades de conservação o
+grupo importa: as de proteção integral, como parques e estações ecológicas, em regra não
+admitem imóveis privados; as de uso sustentável incluem as áreas de proteção ambiental
+(APA) e as reservas particulares (RPPN), onde a propriedade privada é normal.
+
+```python
+protected = quality.groupby("state")[
+    ["properties", "indigenous", "strict_protection", "sustainable_use"]].sum()
+protected.sum()
+```
+
+```python
+order = protected[["indigenous", "strict_protection"]].sum(axis=1).sort_values().index
+ax = protected.loc[order, ["indigenous", "strict_protection"]].rename(
+    columns={"indigenous": "Terra indígena", "strict_protection": "Proteção integral"}
+).plot.barh(stacked=True, color=["#c2255c", "#2b8a3e"], figsize=(7, 6.4), width=0.8)
+ax.set_title("Imóveis do CAR sobre terra indígena ou unidade de proteção integral\n"
+             "Imóveis não cancelados com mais de 1% da área dentro dessas áreas",
+             loc="left", fontsize=10)
+ax.set_ylabel("")
+ax.spines[["top", "right"]].set_visible(False)
+
+fig("protegidas")
+```
+
+![protegidas](assets/protegidas.png)
+
+Os municípios com mais casos, em cada tipo:
+
+```python
+quality.sort_values("indigenous", ascending=False)[
+    ["state", "municipality", "properties", "indigenous", "indigenous_ha"]].head(5)
+```
+
+```text
+     state         municipality  properties  indigenous  indigenous_ha
+1826    BA                Abaré        2167        1114        9996.96
+519     MA      Fernando Falcão        1291         658      640981.44
+1714    AL  Palmeira dos Índios        5745         481        4111.04
+2605    MG           Itacarambi        2458         448       26549.34
+532     MA               Grajaú        5508         370      106598.06
+```
+
+```python
+quality.sort_values("strict_protection", ascending=False)[
+    ["state", "municipality", "properties", "strict_protection", "strict_protection_ha"]].head(5)
+```
+
+```text
+     state   municipality  properties  strict_protection  strict_protection_ha
+2639    MG       Januária       12397               2377             263162.61
+16      RO    Porto Velho       23819               1773             359216.41
+2614    MG       Itamonte        1854               1384              29674.25
+89      AM       Canutama        2883               1313             685990.78
+3219    RJ  Nova Friburgo        3577               1287              32539.68
+```
+
+Por imóvel, `car_quality()` traz a parcela da área e o nome da terra indígena ou da
+unidade de conservação. É o que `car_check()` usa na triagem: um cadastro ativo passa de
+`"ok"` a `"attention"` quando mais de 1% da área está em terra indígena ou em unidade de
+proteção integral, e a nota diz qual.
+
+```python
+aguas_belas = carbr.car_quality("PE", municipality="Águas Belas")
+inside = aguas_belas[aguas_belas["indigenous_share"] > 0.5]
+inside[["property_code", "indigenous_share", "indigenous_land"]].head(3)
+```
+
+```python
+check = carbr.car_check(inside["property_code"].head(2))
+for row in check.itertuples():
+    print(row.check, "|", row.note)
+```
+
+```text
+attention | Analisado, com notificação sem resposta do declarante. Sobrepõe terra indígena (Fulni-ô) em toda a área.
+attention | Analisado, com notificação sem resposta do declarante. Sobrepõe terra indígena (Fulni-ô) em toda a área.
+```
+
+O sinal vem de perímetros autodeclarados cruzados com limites oficiais, e não é uma
+conclusão sobre o imóvel: há terras indígenas ainda em estudo, e cadastros anteriores à
+criação de uma unidade de conservação.
+
 ## O código diz um município, o cadastro diz outro
 
 O código do imóvel traz o município em que ele foi registrado (`UF-0000000-…`). Em
@@ -325,9 +412,9 @@ carbr.car_tbl("PE").filter("size_class = 'small' AND area_ha > 440").aggregate(
 
 ```text
            property_type  properties   area_ha
-0             settlement         432  651693.0
-1  traditional_community          65  164138.0
-2         rural_property           1     926.0
+0         rural_property           1     926.0
+1             settlement         432  651693.0
+2  traditional_community          65  164138.0
 ```
 
 Quem conta "pequenos produtores" pelo porte deve separar o tipo do imóvel

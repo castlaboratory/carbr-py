@@ -47,11 +47,11 @@ national
 
 ```text
                           stage  properties  share
-0            Aguardando análise     5978543   69.7
-1                    Em análise      109335    1.3
-2      Notificado, sem resposta     1309315   15.3
+0            Aguardando análise     5978517   69.7
+1                    Em análise      109355    1.3
+2      Notificado, sem resposta     1309319   15.3
 3  Respondeu, aguarda reanálise      134338    1.6
-4                     Analisado      874463   10.2
+4                     Analisado      874465   10.2
 5                     Cancelado      172067    2.0
 ```
 
@@ -121,7 +121,7 @@ waiting
    size_class  properties  share
 2       large       27771    2.1
 8      medium       86308    6.6
-14      small     1195236   91.3
+14      small     1195240   91.3
 ```
 
 Nove em cada dez são imóveis de até quatro módulos fiscais. É o público que menos tem
@@ -202,3 +202,84 @@ fig("para")
 É uma lista de onde um mutirão, um sindicato ou um serviço de atendimento ao produtor
 rende mais: municípios com muitos imóveis já analisados à espera de uma resposta que
 depende só de o declarante entender o que foi pedido.
+
+## Uma tipologia dos municípios
+
+As etapas da análise, o porte dos imóveis e a sobreposição entre cadastros variam juntos,
+e os municípios se parecem em blocos. `car_typology()` resume isso: cada município entra
+num de cinco grupos, achados por agrupamento (k-médias) sobre sete indicadores do
+cadastro. Os grupos ficam fixos de uma atualização para a outra, de modo que dá para
+acompanhar um município mudando de grupo.
+
+```python
+carbr.car_typology_groups()[["typology_label", "municipalities", "properties", "description"]]
+```
+
+```text
+                         typology_label  municipalities  properties  \
+0  Pequenos imóveis à espera de análise            2419     4120960   
+1                      Análise avançada             976     1047289   
+2   Grandes imóveis à espera de análise             804      735672   
+3              Notificados sem resposta             732     1346341   
+4                    Muita sobreposição             588     1154936   
+5                      Poucos cadastros              44         592   
+
+                                                   description  
+0  Quase só imóveis pequenos, e a grande maioria ainda agua...  
+1  Boa parte dos cadastros já foi analisada ou está em anál...  
+2  A maior parte da área declarada está em imóveis grandes,...  
+3  A análise andou, mas a maioria dos cadastros espera a re...  
+4  Mais da metade dos imóveis tem a maior parte da área den...  
+5  Menos de 30 imóveis não cancelados: pouco para caracteri...
+```
+
+O perfil médio de cada grupo mostra de onde vêm os nomes:
+
+```python
+typology = carbr.car_typology()
+typology.groupby("typology_label")[
+    ["small_share", "large_area_share", "waiting_share", "notified_share",
+     "analysed_share", "overlap_share", "coverage"]].mean().round(2)
+```
+
+```python
+import geopandas as gpd
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
+
+GROUPS = {
+    "Pequenos imóveis à espera de análise": "#adb5bd",
+    "Grandes imóveis à espera de análise": "#4c6ef5",
+    "Análise avançada": "#37b24d",
+    "Notificados sem resposta": "#f76707",
+    "Muita sobreposição": "#c2255c",
+    "Poucos cadastros": "#f1f3f5",
+}
+brazil = gpd.read_file(
+    "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?intrarregiao=municipio"
+    "&formato=application/vnd.geo%2Bjson&qualidade=minima")
+brazil["municipality_code"] = brazil["codarea"].astype(int)
+brazil = brazil.merge(typology, on="municipality_code", how="left")
+brazil["colour"] = brazil["typology_label"].map(GROUPS).fillna("#f1f3f5")
+
+ax = brazil.plot(color=brazil["colour"], figsize=(7, 7.6), linewidth=0)
+ax.legend(handles=[Patch(color=c, label=g) for g, c in GROUPS.items()], loc="upper center",
+          bbox_to_anchor=(0.5, 0.02), ncol=2, frameon=False, fontsize=8)
+ax.set_title("Tipologia dos municípios pelo perfil do CAR", loc="left")
+ax.set_axis_off()
+
+fig("tipologia")
+```
+
+![tipologia](assets/tipologia.png)
+
+O mapa separa situações que pedem respostas diferentes. Onde a análise mal começou, o
+gargalo é a capacidade do órgão ambiental. Onde os cadastros estão notificados e sem
+resposta, é o atendimento ao declarante. Onde a sobreposição domina, é a qualidade do
+que foi declarado. E um estado pode ter mais de uma dessas situações: o grupo mais
+comum em cada UF,
+
+```python
+top = typology.groupby("state")["typology_label"].agg(lambda s: s.value_counts().index[0])
+top.value_counts()
+```
