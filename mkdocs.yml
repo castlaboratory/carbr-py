@@ -34,6 +34,8 @@ extra_css:
 nav:
   - Início: index.md
   - Primeiros passos: primeiros-passos.md
+  - Inconsistências do cadastro: inconsistencias.md
+  - Onde a análise está parada: fila-da-analise.md
   - Referência das funções: api.md
   - Novidades: news.md
 

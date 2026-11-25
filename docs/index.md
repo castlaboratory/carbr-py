@@ -42,6 +42,12 @@ carbr.car_property("PE-2611101-588BC484570D440484F527F07DF5AFFA")
 carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 ```
 
+## Guias
+
+- [Primeiros passos](primeiros-passos.md)
+- [Inconsistências do cadastro](inconsistencias.md): sobreposições, imóveis fora do município, área declarada maior que o território.
+- [Onde a análise está parada](fila-da-analise.md): as etapas da análise por UF e quem aguarda resposta à notificação.
+
 ## Os dados
 
 - **Origem:** serviço público do Sicar, do Serviço Florestal Brasileiro. O cadastro é

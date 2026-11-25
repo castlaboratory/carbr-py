@@ -5,7 +5,7 @@ publicação real, e o Markdown que o site publica é gravado com a saída e a
 figura embutidas. O build do site, então, não precisa de rede. Rode da raiz
 do repositório quando um exemplo ou os dados mudarem e commite o resultado:
 
-    python docs/precompile.py
+    python docs/precompile.py [página.md ...]
 """
 
 from __future__ import annotations
@@ -341,5 +341,403 @@ PRIMEIROS_PASSOS = [
 ]
 
 
+INCONSISTENCIAS = [
+    (
+        """
+        # Inconsistências do cadastro
+
+        O CAR é **autodeclarado**: quem desenha o perímetro e informa os dados é o próprio
+        declarante, e a conferência vem depois, na análise. Enquanto ela não chega, o cadastro
+        guarda sobreposições, imóveis fora do município informado e áreas que não fecham com o
+        território. Este guia mostra como encontrar essas inconsistências com o `carbr`, do
+        país até um município.
+
+        Nada aqui é juízo sobre um imóvel em particular: são sinais para orientar a análise e
+        para quem usa os dados saber o que tem em mãos.
+        """,
+        """
+        import carbr
+        import geopandas as gpd
+
+
+        def ibge_mesh(path):
+            url = ("https://servicodados.ibge.gov.br/api/v3/malhas/" + path
+                   + "formato=application/vnd.geo%2Bjson&qualidade=intermediaria")
+            return gpd.read_file(url).to_crs(4674)
+        """,
+    ),
+    (
+        """
+        ## O que a carga já registra
+
+        Ao republicar os dados, o `carbr` anota no catálogo o que encontrou em cada UF:
+        geometrias inválidas (com autointerseção, por exemplo) e imóveis cujo código começa
+        com a sigla de outra UF. As inválidas ficam na publicação, marcadas na coluna
+        `geometry_valid`.
+        """,
+        """
+        cat = carbr.car_catalog()
+        print(cat[["invalid_geometries", "registered_in_other_state"]].sum())
+
+        cat.sort_values("invalid_geometries", ascending=False)[
+            ["state", "properties", "invalid_geometries", "registered_in_other_state"]
+        ].head(6)
+        """,
+    ),
+    (
+        """
+        ## O código diz um município, o cadastro diz outro
+
+        O código do imóvel traz o município em que ele foi registrado (`UF-0000000-…`). Em
+        Pernambuco, comparando com a coluna `municipality_code`:
+        """,
+        """
+        moved = carbr.car_tbl("PE").filter(
+            "substr(property_code, 4, 7) <> municipality_code::VARCHAR"
+        ).project("property_code, municipality, area_ha").df()
+        print(len(moved), "imóveis")
+
+        moved["municipality"].value_counts().head(6)
+        """,
+    ),
+    (
+        """
+        Nem todo caso é erro — imóveis mudam de município quando a base municipal é
+        atualizada —, mas é uma lista curta para conferir.
+
+        ## Mais área declarada do que território
+
+        Somando a área declarada dos imóveis de cada município e dividindo pela área do
+        município na malha do IBGE, o resultado não deveria passar de 1. Passa em vários.
+        """,
+        """
+        mesh = ibge_mesh("estados/PE?intrarregiao=municipio&")
+        mesh["municipality_code"] = mesh["codarea"].astype(int)
+        mesh["territory_ha"] = mesh.to_crs(6933).area / 1e4  # projeção de área igual
+
+        ratio = mesh.merge(carbr.car_municipalities("PE"), on="municipality_code", how="left")
+        ratio["ratio"] = ratio["area_ha"] / ratio["territory_ha"]
+        print((ratio["ratio"] > 1).sum(), "de", len(ratio), "municípios com mais área declarada que território")
+
+        ratio.sort_values("ratio", ascending=False)[
+            ["municipality", "properties", "area_ha", "territory_ha", "ratio"]
+        ].head(6).round(2)
+        """,
+    ),
+    (
+        """
+        A concentração na Zona da Mata sugere sobreposição sistemática entre imóveis, não
+        erro isolado.
+        """,
+        """
+        from matplotlib.colors import BoundaryNorm, ListedColormap
+
+        cmap = ListedColormap(["#e8f1e4", "#b7d3ad", "#7fae78", "#f08c4a", "#c92a2a"])
+        norm = BoundaryNorm([0, 0.5, 0.8, 1, 1.5, 10], cmap.N)
+        ax = ratio.plot(column="ratio", cmap=cmap, norm=norm, edgecolor="white", linewidth=0.2,
+                        figsize=(7, 3.6), legend=True,
+                        legend_kwds={"shrink": 0.6, "ticks": [0, 0.5, 0.8, 1, 1.5],
+                                     "label": "Área declarada / área do município"},
+                        missing_kwds={"color": "#d9d9d9"})
+        ax.set_xlim(-41.4, -34.8)
+        ax.set_ylim(-9.5, -7.25)
+        ax.set_title("Onde o CAR declara mais área do que o município tem", loc="left")
+        ax.set_axis_off()
+
+        fig("razao")
+        """,
+    ),
+    (
+        """
+        ## Dentro de um município: Petrolina
+
+        Com os perímetros, dá para ir ao detalhe. Os imóveis não cancelados de Petrolina e o
+        limite do município, em coordenadas planas para medir em hectares:
+        """,
+        """
+        petrolina = carbr.car_properties("PE", municipality="Petrolina")
+        petrolina = petrolina[(petrolina["status"] != "cancelled") & petrolina["geometry_valid"]]
+        utm = petrolina.to_crs(31984).reset_index(drop=True)
+        boundary = mesh[mesh["codarea"] == "2611101"].to_crs(31984)
+
+        len(utm)
+        """,
+    ),
+    (
+        """
+        ### Imóveis fora do município
+
+        Recortando cada imóvel pelo limite do município, sai a parcela da área que fica do
+        lado de fora. Faixas estreitas na divisa são esperadas, porque o traçado do IBGE e o
+        do declarante nunca coincidem; o sinal é o imóvel com mais da metade da área fora.
+        """,
+        """
+        inside_ha = utm.intersection(boundary.geometry.iloc[0]).area / 1e4
+        utm["geometry_ha"] = utm.area / 1e4
+        utm["outside"] = (1 - inside_ha / utm["geometry_ha"]) > 0.5
+
+        print(utm["outside"].sum(), "imóveis,", round(utm.loc[utm["outside"], "area_ha"].sum()), "hectares")
+        """,
+    ),
+    (
+        "",
+        """
+        ax = boundary.plot(color="#f4f8f1", edgecolor="#123a23", linewidth=1, figsize=(7, 7))
+        utm[~utm["outside"]].plot(ax=ax, color="#8fbf9f", alpha=0.6)
+        utm[utm["outside"]].plot(ax=ax, color="#c92a2a", edgecolor="#c92a2a", linewidth=0.5)
+        ax.set_title("Imóveis registrados em Petrolina que ficam fora do município\\n"
+                     "Em vermelho, os que têm mais da metade da área fora do limite do IBGE",
+                     loc="left", fontsize=10)
+        ax.set_axis_off()
+
+        fig("fora")
+        """,
+    ),
+    (
+        """
+        ### Sobreposições
+
+        Uma junção espacial do conjunto com ele mesmo, com o predicado `overlaps`, aponta
+        para cada imóvel os outros com que ele divide área (tocar na divisa não conta).
+        """,
+        """
+        pairs = gpd.sjoin(utm[["property_code", "geometry"]], utm[["geometry"]], predicate="overlaps")
+        utm["neighbours"] = pairs.groupby(level=0).size().reindex(utm.index, fill_value=0)
+        summed_ha = utm["geometry_ha"].sum()
+        covered_ha = utm.union_all().area / 1e4
+
+        print(f"{(utm['neighbours'] > 0).sum()} de {len(utm)} imóveis sobrepõem ao menos um vizinho")
+        print(f"soma das áreas: {summed_ha:.0f} ha; área coberta: {covered_ha:.0f} ha; "
+              f"contado em dobro: {summed_ha - covered_ha:.0f} ha")
+        """,
+    ),
+    (
+        """
+        A maioria das sobreposições são faixas estreitas na divisa. Os casos que mais pesam
+        são poucos:
+        """,
+        """
+        utm.sort_values("neighbours", ascending=False)[
+            ["property_code", "area_ha", "fiscal_modules", "size_class", "neighbours"]
+        ].head(6)
+        """,
+    ),
+    (
+        """
+        ### "Pequeno" nem sempre é pequeno
+
+        O porte (`size_class`) vem dos módulos fiscais informados pelo Sicar, não da área. Em
+        assentamentos e territórios de povos e comunidades tradicionais, um único cadastro
+        cobre muitas famílias, e um perímetro de milhares de hectares aparece com menos de
+        quatro módulos. Em Pernambuco, os imóveis "pequenos" com mais de 440 hectares — quatro
+        vezes o maior módulo fiscal do país:
+        """,
+        """
+        carbr.car_tbl("PE").filter("size_class = 'small' AND area_ha > 440").aggregate(
+            "property_type, count(*) AS properties, round(sum(area_ha)) AS area_ha"
+        ).df()
+        """,
+    ),
+    (
+        """
+        Quem conta "pequenos produtores" pelo porte deve separar o tipo do imóvel
+        (`property_type`) antes.
+
+        ## O que fazer com isso
+
+        Cada sinal acima vira uma lista de imóveis: `property_code` leva ao cadastro, e
+        `car_property()` devolve o perímetro. Para repetir a análise em outro município ou
+        outra UF, basta trocar os argumentos.
+        """,
+        None,
+    ),
+]
+
+ANALISE = [
+    (
+        """
+        # Onde a análise está parada
+
+        Cadastrar foi a parte rápida: o país tem mais de 8,5 milhões de imóveis no CAR. A
+        regularização depende do passo seguinte — o órgão estadual analisar o cadastro e o
+        produtor responder ao que a análise pede. Este guia usa a coluna `condition`, a etapa
+        da análise informada pelo Sicar, para mostrar onde cada UF está e quem espera por quem.
+
+        Tudo aqui sai do resumo pré-calculado (`car_summary()`), em segundos, menos o mapa do
+        fim, que lê duas colunas de um estado.
+
+        ## As etapas
+
+        O Sicar informa quinze situações de análise. Agrupadas em seis etapas:
+        """,
+        """
+        import carbr
+
+        STAGES = ["Aguardando análise", "Em análise", "Notificado, sem resposta",
+                  "Respondeu, aguarda reanálise", "Analisado", "Cancelado"]
+
+
+        def stage(condition):
+            if condition.startswith("Cancelado"):
+                return "Cancelado"
+            if condition == "Aguardando análise":
+                return "Aguardando análise"
+            if condition == "Em análise":
+                return "Em análise"
+            if "aguardando atendimento a notificação" in condition:
+                return "Notificado, sem resposta"
+            if "após revisão" in condition:
+                return "Respondeu, aguarda reanálise"
+            return "Analisado"
+
+
+        def by_stage(*by):
+            df = carbr.car_summary(["condition", *by])
+            df["stage"] = pd.Categorical(df["condition"].map(stage), STAGES)
+            return df.groupby([*by, "stage"], observed=False)["properties"].sum().reset_index()
+
+
+        national = by_stage()
+        national["share"] = (100 * national["properties"] / national["properties"].sum()).round(1)
+
+        national
+        """,
+    ),
+    (
+        """
+        Sete em cada dez cadastros ainda não foram analisados. Dos que foram, a maior parte
+        parou no passo seguinte: há mais imóveis notificados à espera de resposta do
+        declarante do que imóveis com análise concluída.
+
+        ## A fila não é a mesma em cada UF
+        """,
+        """
+        palette = {"Aguardando análise": "#d9d9d9", "Em análise": "#9ecae1",
+                   "Notificado, sem resposta": "#e8590c", "Respondeu, aguarda reanálise": "#fcc419",
+                   "Analisado": "#2b8a3e", "Cancelado": "#868e96"}
+        states = by_stage("state").pivot(index="state", columns="stage", values="properties")
+        shares = states.div(states.sum(axis=1), axis=0).sort_values("Aguardando análise")
+
+        ax = (100 * shares).plot.barh(stacked=True, figsize=(7, 6.8), width=0.8,
+                                      color=[palette[s] for s in shares.columns])
+        ax.set_title("Em que etapa da análise estão os imóveis de cada UF (%)", loc="left")
+        ax.set_xlim(0, 100)
+        ax.set_ylabel("")
+        ax.legend(ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.05), fontsize=8)
+
+        fig("etapas")
+        """,
+    ),
+    (
+        """
+        Há três situações bem diferentes. Em parte dos estados quase nada foi analisado
+        (cinza). Em alguns a análise andou e concluiu (verde). E em outros a análise andou,
+        mas parou na notificação (laranja): o órgão fez a sua parte e a resposta não veio.
+        """,
+        """
+        notified = states["Notificado, sem resposta"].sort_values(ascending=False).to_frame("properties")
+        notified["share_of_state"] = (100 * shares["Notificado, sem resposta"]).round(1)
+        top5 = 100 * notified["properties"].head(5).sum() / notified["properties"].sum()
+        print(f"As cinco primeiras UFs concentram {top5:.0f}% das notificações sem resposta")
+
+        notified.head(8)
+        """,
+    ),
+    (
+        "## Quem está sem responder",
+        """
+        waiting = by_stage("size_class")
+        waiting = waiting[waiting["stage"] == "Notificado, sem resposta"].drop(columns="stage")
+        waiting["share"] = (100 * waiting["properties"] / waiting["properties"].sum()).round(1)
+
+        waiting
+        """,
+    ),
+    (
+        """
+        Nove em cada dez são imóveis de até quatro módulos fiscais. É o público que menos tem
+        acesso a técnico, a ferramenta de geoprocessamento e a quem explique o relatório da
+        análise — e para quem a pendência no CAR pesa no crédito rural.
+
+        ## A notificação envelhece
+
+        Pelo ano de criação do cadastro, a resposta não chega com o tempo: de cada ano desde
+        2015, entre um oitavo e um quinto dos cadastros está parado na notificação, e os mais
+        antigos não estão em situação melhor.
+        """,
+        """
+        years = by_stage("created_year").pivot(index="created_year", columns="stage", values="properties")
+
+        ax = (years / 1e3).plot.bar(stacked=True, figsize=(7, 4), width=0.85, rot=0,
+                                    color=[palette[s] for s in years.columns])
+        ax.set_title("Etapa atual da análise, por ano de criação do cadastro", loc="left")
+        ax.set_xlabel("")
+        ax.set_ylabel("Milhares de imóveis")
+        ax.legend(ncol=2, frameon=False, fontsize=8)
+
+        fig("analise-anos")
+        """,
+    ),
+    (
+        """
+        ## Onde, dentro de um estado
+
+        O resumo vai até a UF. Para descer ao município, `car_tbl()` lê só as duas colunas
+        necessárias do arquivo do estado. No Pará, a UF com mais notificações sem resposta:
+        """,
+        """
+        para = carbr.car_tbl("PA").aggregate(
+            "municipality_code, municipality, condition, count(*) AS n"
+        ).df()
+        para["notified"] = para["n"].where(para["condition"].map(stage) == "Notificado, sem resposta", 0)
+        para = para.groupby(["municipality_code", "municipality"], as_index=False)[["n", "notified"]].sum()
+        para = para.rename(columns={"n": "properties"})
+        para["share"] = (100 * para["notified"] / para["properties"]).round(1)
+
+        para.sort_values("notified", ascending=False).head(6)
+        """,
+    ),
+    (
+        "",
+        """
+        import geopandas as gpd
+
+        mesh = gpd.read_file(
+            "https://servicodados.ibge.gov.br/api/v3/malhas/estados/PA?intrarregiao=municipio"
+            "&formato=application/vnd.geo%2Bjson&qualidade=intermediaria"
+        )
+        mesh["municipality_code"] = mesh["codarea"].astype(int)
+        mesh = mesh.merge(para, on="municipality_code", how="left")
+
+        ax = mesh.plot(column="share", cmap="Oranges", edgecolor="white", linewidth=0.2,
+                       figsize=(7, 6.4), legend=True,
+                       legend_kwds={"shrink": 0.5, "label": "Notificados, sem resposta (%)"},
+                       missing_kwds={"color": "#d9d9d9"})
+        ax.set_title("Pará: imóveis notificados que aguardam resposta do declarante\\n"
+                     "Parcela dos imóveis de cada município", loc="left", fontsize=10)
+        ax.set_axis_off()
+
+        fig("para")
+        """,
+    ),
+    (
+        """
+        É uma lista de onde um mutirão, um sindicato ou um serviço de atendimento ao produtor
+        rende mais: municípios com muitos imóveis já analisados à espera de uma resposta que
+        depende só de o declarante entender o que foi pedido.
+        """,
+        None,
+    ),
+]
+
+PAGES = {
+    "primeiros-passos.md": PRIMEIROS_PASSOS,
+    "inconsistencias.md": INCONSISTENCIAS,
+    "fila-da-analise.md": ANALISE,
+}
+
 if __name__ == "__main__":
-    page("primeiros-passos.md", PRIMEIROS_PASSOS)
+    import sys
+
+    for name in sys.argv[1:] or PAGES:
+        page(name, PAGES[name])
