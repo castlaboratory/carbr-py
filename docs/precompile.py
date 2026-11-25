@@ -27,6 +27,7 @@ DOCS = Path(__file__).parent
 pd.set_option("display.width", 100)
 pd.set_option("display.max_columns", 8)
 pd.set_option("display.max_colwidth", 60)
+pd.set_option("display.max_rows", 12)
 carbr.set_verbose(False)
 carbr.car_catalog(refresh=True)
 
@@ -202,31 +203,57 @@ PRIMEIROS_PASSOS = [
         """
         ## Imóveis de um município
 
-        Os filtros de `car_properties()` são aplicados antes da leitura. Aqui, os imóveis
-        médios e grandes de Petrolina, em Pernambuco — algumas centenas, de um arquivo com
-        mais de 400 mil. Com o extra `geo` instalado, o resultado é um GeoDataFrame em
-        SIRGAS 2000.
+        `car_properties()` traz os imóveis de uma UF, com filtros aplicados antes da leitura:
+        só os trechos do arquivo que atendem ao filtro são transferidos. Aqui, todos os
+        imóveis de Petrolina, em Pernambuco — cerca de 11 mil, de um arquivo estadual com mais
+        de 400 mil. Com o extra `geo` instalado, o resultado é um GeoDataFrame em SIRGAS 2000.
         """,
         """
-        petrolina = carbr.car_properties(
-            "PE", municipality="Petrolina", size_class=["medium", "large"]
-        )
+        petrolina = carbr.car_properties("PE", municipality="Petrolina")
 
         petrolina[["property_code", "status", "area_ha", "fiscal_modules", "size_class"]].head(6)
         """,
     ),
     (
-        "",
         """
-        ax = petrolina.plot(
-            column="size_class", categorical=True, legend=True, figsize=(7, 5.5),
-            cmap="Greens", edgecolor="white", linewidth=0.2,
-            legend_kwds={"loc": "lower left", "frameon": False},
-        )
-        ax.set_title("Imóveis médios e grandes no CAR — Petrolina, Pernambuco")
+        Sobre uma imagem de satélite, o cadastro mostra a ocupação do município: os lotes
+        estreitos dos perímetros irrigados junto ao rio São Francisco, ao sul e a leste, e os
+        imóveis maiores da caatinga, ao norte. O fundo vem do pacote `contextily`.
+        """,
+        """
+        import contextily as ctx
+        from matplotlib.patches import Patch
+
+        valid = petrolina[petrolina["geometry_valid"] & (petrolina["status"] != "cancelled")]
+        valid = valid.sort_values("area_ha", ascending=False)
+        colors = {"small": "#ffe066", "medium": "#ff922b", "large": "#e03131"}
+        labels = {"small": "Pequeno (até 4 módulos fiscais)", "medium": "Médio (4 a 15)",
+                  "large": "Grande (acima de 15)"}
+
+        ax = valid.plot(color=valid["size_class"].map(colors), edgecolor=valid["size_class"].map(colors),
+                        linewidth=0.3, alpha=0.55, figsize=(7, 7.6))
+        ctx.add_basemap(ax, crs=valid.crs, source=ctx.providers.Esri.WorldImagery, zoom=10,
+                        attribution="Fonte: SFB/Sicar, via carbr. Imagem: Esri World Imagery.",
+                        attribution_size=6)
+        ax.legend(handles=[Patch(color=colors[k], label=labels[k]) for k in colors],
+                  loc="upper right", fontsize=8, framealpha=0.9)
+        ax.set_title(f"Imóveis declarados no CAR em Petrolina, Pernambuco\\n"
+                     f"{len(valid)} cadastros ativos ou pendentes, por porte", loc="left", fontsize=11)
         ax.set_axis_off()
 
         fig("petrolina")
+        """,
+    ),
+    (
+        "Os filtros combinam. Só os imóveis grandes com cadastro ativo:",
+        """
+        large = carbr.car_properties(
+            "PE", municipality="Petrolina", size_class="large", status="active", geometry=False
+        )
+
+        large.sort_values("area_ha", ascending=False)[
+            ["property_code", "area_ha", "fiscal_modules", "condition"]
+        ]
         """,
     ),
     (

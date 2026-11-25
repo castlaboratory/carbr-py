@@ -28,7 +28,7 @@ dependencies = [
 geo = ["geopandas>=1.0"]
 test = ["pytest>=7", "geopandas>=1.0"]
 dev = ["pytest>=7", "geopandas>=1.0", "ruff>=0.6", "build>=1.0"]
-docs = ["mkdocs-material>=9.5", "mkdocstrings[python]>=0.26", "matplotlib>=3.5", "geopandas>=1.0"]
+docs = ["mkdocs-material>=9.5", "mkdocstrings[python]>=0.26", "matplotlib>=3.5", "geopandas>=1.0", "contextily>=1.5"]
 
 [project.urls]
 Homepage = "https://strategicprojects.github.io/carbr-py/"

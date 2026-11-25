@@ -209,42 +209,82 @@ mun.sort_values("properties", ascending=False)[
 
 ## Imóveis de um município
 
-Os filtros de `car_properties()` são aplicados antes da leitura. Aqui, os imóveis
-médios e grandes de Petrolina, em Pernambuco — algumas centenas, de um arquivo com
-mais de 400 mil. Com o extra `geo` instalado, o resultado é um GeoDataFrame em
-SIRGAS 2000.
+`car_properties()` traz os imóveis de uma UF, com filtros aplicados antes da leitura:
+só os trechos do arquivo que atendem ao filtro são transferidos. Aqui, todos os
+imóveis de Petrolina, em Pernambuco — cerca de 11 mil, de um arquivo estadual com mais
+de 400 mil. Com o extra `geo` instalado, o resultado é um GeoDataFrame em SIRGAS 2000.
 
 ```python
-petrolina = carbr.car_properties(
-    "PE", municipality="Petrolina", size_class=["medium", "large"]
-)
+petrolina = carbr.car_properties("PE", municipality="Petrolina")
 
 petrolina[["property_code", "status", "area_ha", "fiscal_modules", "size_class"]].head(6)
 ```
 
 ```text
                                  property_code  status   area_ha  fiscal_modules size_class
-0  PE-2611101-111805B2DFBA4AF7B2BE2458D8CE27FD  active  652.4604         11.6057     medium
-1  PE-2611101-B095898582B2428EBDD3200C7CA25992  active  245.1787          4.4578     medium
-2  PE-2611101-69A386072C4E4D3189F24800452142C1  active  245.5974          4.4654     medium
-3  PE-2611101-C283CE3BF96A440DBE8D9026B91FC2C1  active  534.9252          9.7259     medium
-4  PE-2611101-ADEC18D9D8EA4CB6B5A3F56074EA0B63  active  432.0721          7.8559     medium
-5  PE-2611101-03F43B55FBE64453A6F2F740902D02CB  active  803.5238         14.6095     medium
+0  PE-2611101-0D7CB5B3271D4C10BB99569D4857BA39  active   52.8957          0.9617      small
+1  PE-2611101-111805B2DFBA4AF7B2BE2458D8CE27FD  active  652.4604         11.6057     medium
+2  PE-2611101-4E7C9A07F92E4181A8CD600ECAE54DDF  active    2.8515          0.0518      small
+3  PE-2611101-328696C6E5DD436D9AAB872A359C600A  active   40.9305          0.7385      small
+4  PE-2611101-D0361CB6B3964A1781A0D7E4C507D83C  active    2.5074          0.0456      small
+5  PE-2611101-F180E6F04B0B4F39A28C791C4F1BECE8  active    9.6502          0.1755      small
 ```
 
+Sobre uma imagem de satélite, o cadastro mostra a ocupação do município: os lotes
+estreitos dos perímetros irrigados junto ao rio São Francisco, ao sul e a leste, e os
+imóveis maiores da caatinga, ao norte. O fundo vem do pacote `contextily`.
+
 ```python
-ax = petrolina.plot(
-    column="size_class", categorical=True, legend=True, figsize=(7, 5.5),
-    cmap="Greens", edgecolor="white", linewidth=0.2,
-    legend_kwds={"loc": "lower left", "frameon": False},
-)
-ax.set_title("Imóveis médios e grandes no CAR — Petrolina, Pernambuco")
+import contextily as ctx
+from matplotlib.patches import Patch
+
+valid = petrolina[petrolina["geometry_valid"] & (petrolina["status"] != "cancelled")]
+valid = valid.sort_values("area_ha", ascending=False)
+colors = {"small": "#ffe066", "medium": "#ff922b", "large": "#e03131"}
+labels = {"small": "Pequeno (até 4 módulos fiscais)", "medium": "Médio (4 a 15)",
+          "large": "Grande (acima de 15)"}
+
+ax = valid.plot(color=valid["size_class"].map(colors), edgecolor=valid["size_class"].map(colors),
+                linewidth=0.3, alpha=0.55, figsize=(7, 7.6))
+ctx.add_basemap(ax, crs=valid.crs, source=ctx.providers.Esri.WorldImagery, zoom=10,
+                attribution="Fonte: SFB/Sicar, via carbr. Imagem: Esri World Imagery.",
+                attribution_size=6)
+ax.legend(handles=[Patch(color=colors[k], label=labels[k]) for k in colors],
+          loc="upper right", fontsize=8, framealpha=0.9)
+ax.set_title(f"Imóveis declarados no CAR em Petrolina, Pernambuco\n"
+             f"{len(valid)} cadastros ativos ou pendentes, por porte", loc="left", fontsize=11)
 ax.set_axis_off()
 
 fig("petrolina")
 ```
 
 ![petrolina](assets/petrolina.png)
+
+Os filtros combinam. Só os imóveis grandes com cadastro ativo:
+
+```python
+large = carbr.car_properties(
+    "PE", municipality="Petrolina", size_class="large", status="active", geometry=False
+)
+
+large.sort_values("area_ha", ascending=False)[
+    ["property_code", "area_ha", "fiscal_modules", "condition"]
+]
+```
+
+```text
+                                 property_code    area_ha  fiscal_modules           condition
+6  PE-2611101-1D0D47540B264F2183AE47FFF23F1354  1820.1678         33.0940  Aguardando análise
+7  PE-2611101-F9DE04E8745149E5B3557922FB5DD40D  1595.1267         29.0023  Aguardando análise
+8  PE-2611101-E4D25AC2FB254BD0B3A29678D08F9C0E  1281.4753         23.2996  Aguardando análise
+4  PE-2611101-C52BB95C85E24595B8392A28CB190C13  1037.1799         18.8578  Aguardando análise
+9  PE-2611101-9FB673F34F904B3B951BD4DD2E7AFB18  1025.5740         18.6468  Aguardando análise
+1  PE-2611101-F2B10E8F0D7749A89200B1B538FBAE86  1023.6300         18.6115  Aguardando análise
+3  PE-2611101-6BEF7820114C4BE99B3974A937409469   995.5764         18.1014  Aguardando análise
+2  PE-2611101-A0DF298BDC7C48ACB976417AA75C9050   994.5673         18.0830  Aguardando análise
+0  PE-2611101-A94CA3B342CF444CBCB9C558E9A7CAFC   843.6371         15.3389  Aguardando análise
+5  PE-2611101-1608C1C7C3374712B7934B207CE25D46   827.1129         15.0384  Aguardando análise
+```
 
 O município pode ser dado pelo nome (sem diferenciar maiúsculas nem acentos) ou pelo
 código IBGE de sete dígitos. Os outros filtros são `status`, `property_type` e `bbox`.
@@ -315,22 +355,14 @@ status_code                                                  AT
 status                                                   active
 condition                                    Aguardando análise
 property_type_code                                          AST
-property_type                                        settlement
-created_at                     2026-02-13 13:21:54.947000-03:00
-area_ha                                              81578.6042
-fiscal_modules                                           0.5209
-size_class                                                small
-state                                                        PE
-municipality                                          Petrolina
-municipality_code                                       2611101
-registration_state                                           PE
-lon                                                  -40.550236
-lat                                                   -9.131521
+...                                                         ...
 geometry_valid                                             True
 xmin                                                 -40.824844
 ymin                                                  -9.398057
 xmax                                                 -40.298282
 ymax                                                  -8.864982
+
+[21 rows x 1 columns]
 ```
 
 ## Consultas próprias
