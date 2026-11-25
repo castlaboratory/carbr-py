@@ -32,6 +32,7 @@ from .data import (
     car_quality_summary,
     car_summary,
     car_tbl,
+    car_typology,
 )
 
 MAX_ROWS = 200
@@ -60,6 +61,10 @@ Ao responder com estes dados:
   `strict_protection_share` e `sustainable_use_share`, dentro de unidades de conservação de
   proteção integral e de uso sustentável (CNUC/MMA). Uso sustentável não é irregularidade: áreas
   de proteção ambiental (APA) e reservas particulares (RPPN) admitem imóveis privados.
+- Tipologia (`tipologia`, em `municipio`): o grupo do município entre cinco, pelo perfil do
+  cadastro (porte dos imóveis, etapa da análise e sobreposição); `typology_label` é o nome do
+  grupo e os indicadores são parcelas de 0 a 1 (`coverage` é a área declarada sobre a área do
+  município).
 """
 
 STAGE_LABELS = {
@@ -170,7 +175,21 @@ def municipio(uf: str, nome: str) -> dict[str, Any]:
     summary = _records(match.drop(columns=["xmin", "ymin", "xmax", "ymax"]))[0]
     return _envelope(encontrado=True, municipio=summary,
                      etapas=_records(stages.sort_values("properties", ascending=False)),
-                     qualidade=_town_quality(uf, int(row["municipality_code"])))
+                     qualidade=_town_quality(uf, int(row["municipality_code"])),
+                     tipologia=_town_typology(uf, int(row["municipality_code"])))
+
+
+def _town_typology(uf: str, code: int) -> dict[str, Any] | None:
+    """Grupo do município na tipologia, ou `None` se a publicação não a traz."""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        towns = car_typology(uf)
+    row = towns[towns["municipality_code"] == code]
+    if row.empty:
+        return None
+    return _records(row.drop(columns=["state", "municipality_code", "municipality"]))[0]
 
 
 def _town_quality(uf: str, code: int) -> dict[str, Any] | None:

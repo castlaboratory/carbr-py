@@ -31,6 +31,7 @@ def test_tools_answer_from_the_publication(release):
     assert all(isinstance(r["created_at"], str) for r in here["imoveis"])
     assert {r["area_ha"]: r["overlap_share"] for r in here["imoveis"]} == {10.0: 1.0, 6000.0: 0.04}
     assert town["qualidade"]["overlapping_half"] == 1
+    assert town["tipologia"]["typology"] == "overlapping"
     assert town["qualidade"]["indigenous"] == 1 and town["qualidade"]["strict_protection"] == 1
     assert town["qualidade"]["percentual_com_mais_da_metade_sobreposta"] == 25.0
 

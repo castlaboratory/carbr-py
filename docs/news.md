@@ -1,5 +1,9 @@
 # Novidades
 
+## Em desenvolvimento
+
+- Servidor MCP: `municipio` passa a trazer o grupo do município na tipologia.
+
 ## 0.6.0
 
 - `car_typology()` e `car_typology_groups()`: tipologia dos municípios em cinco grupos, pelo perfil
