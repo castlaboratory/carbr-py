@@ -1,7 +1,7 @@
 # carbr <img src="https://raw.githubusercontent.com/castlaboratory/carbr-py/main/docs/assets/logo.svg" align="right" height="139" alt="" />
 
 [![CI](https://github.com/castlaboratory/carbr-py/actions/workflows/ci.yml/badge.svg)](https://github.com/castlaboratory/carbr-py/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/carbr.svg)](https://pypi.org/project/carbr/)
+[![PyPI](https://img.shields.io/pypi/v/carbr?cacheSeconds=3600)](https://pypi.org/project/carbr/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24532757.svg)](https://doi.org/10.5281/zenodo.24532757)
 
