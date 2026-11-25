@@ -1,7 +1,9 @@
 # carbr <img src="https://raw.githubusercontent.com/StrategicProjects/carbr-py/main/docs/assets/logo.svg" align="right" height="139" alt="" />
 
 [![CI](https://github.com/StrategicProjects/carbr-py/actions/workflows/ci.yml/badge.svg)](https://github.com/StrategicProjects/carbr-py/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/carbr.svg)](https://pypi.org/project/carbr/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24532757.svg)](https://doi.org/10.5281/zenodo.24532757)
 
 Os imóveis rurais declarados no **Cadastro Ambiental Rural (CAR)** no Python, sem
 baixar a base inteira.
@@ -61,6 +63,11 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 
 As mesmas funções existem em R: [carbr-r](https://github.com/StrategicProjects/carbr-r).
 
+## Como citar
+
+O pacote está arquivado no Zenodo: [doi:10.5281/zenodo.24532757](https://doi.org/10.5281/zenodo.24532757) (o DOI aponta sempre para a
+versão mais recente). Os dados são do Sicar; use `car_cite()` para citá-los.
+
 ## Licença
 
-Código sob licença MIT. Os dados são do Sicar; use `car_cite()` para citá-los.
+Código sob licença MIT.
