@@ -9,6 +9,7 @@ Quick start
 -----------
 >>> import carbr
 >>> carbr.car_catalog()                                          # doctest: +SKIP
+>>> carbr.car_summary(["state", "size_class"])                   # doctest: +SKIP
 >>> carbr.car_properties("PE", municipality="Petrolina")         # doctest: +SKIP
 >>> carbr.car_at(lon=-40.5, lat=-9.2)                            # doctest: +SKIP
 """
@@ -34,6 +35,7 @@ from .data import (
     car_municipalities,
     car_properties,
     car_property,
+    car_summary,
     car_tbl,
 )
 
@@ -53,6 +55,7 @@ __all__ = [
     "car_municipalities",
     "car_properties",
     "car_property",
+    "car_summary",
     "car_tbl",
     "set_base_url",
     "set_timeout",

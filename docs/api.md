@@ -6,6 +6,8 @@
 
 ::: carbr.car_dictionary
 
+::: carbr.car_summary
+
 ::: carbr.car_municipalities
 
 ## Obter os imóveis

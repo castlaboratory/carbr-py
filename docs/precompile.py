@@ -86,13 +86,15 @@ PRIMEIROS_PASSOS = [
         O **Cadastro Ambiental Rural (CAR)** é o registro público eletrônico dos imóveis
         rurais do país, criado pelo Código Florestal (Lei nº 12.651/2012) e mantido no Sicar
         pelo Serviço Florestal Brasileiro. O `carbr` lê uma republicação dos dados públicos
-        do cadastro em GeoParquet: cada consulta transfere só os trechos do arquivo de que
-        precisa, sem baixar a base de um estado inteiro e sem passar pelos servidores do Sicar.
+        do cadastro em GeoParquet, com as 27 UFs e cerca de 8,6 milhões de imóveis. Cada
+        consulta transfere só os trechos do arquivo de que precisa, sem baixar a base de um
+        estado inteiro e sem passar pelos servidores do Sicar.
 
         | Função | Para quê |
         |---|---|
         | `car_catalog()` | O que está publicado |
         | `car_dictionary()` | O que cada coluna significa |
+        | `car_summary()` | Totais pré-calculados, do estado ou do país |
         | `car_municipalities()` | Resumo por município |
         | `car_properties()` | Imóveis de uma UF, com filtros |
         | `car_property()` | Um imóvel pelo código |
@@ -103,15 +105,15 @@ PRIMEIROS_PASSOS = [
         ## O que está publicado
 
         `car_catalog()` traz uma linha por UF, com o número de imóveis e os indicadores de
-        qualidade da carga. A versão é a data em que os dados foram lidos do Sicar.
+        qualidade da carga. A versão é a data da última atualização da publicação.
         """,
         """
         import carbr
 
         cat = carbr.car_catalog()
-        print(cat.T)
+        print(cat.attrs["version"], "-", len(cat), "UFs,", cat["properties"].sum(), "imóveis")
 
-        cat.attrs["version"]
+        cat.head(6)
         """,
     ),
     (
@@ -120,16 +122,79 @@ PRIMEIROS_PASSOS = [
     ),
     (
         """
-        ## Resumo por município
+        ## O país inteiro, sem ler os imóveis
 
-        Para contagens, não é preciso ler os imóveis: o resumo municipal é um arquivo
-        pequeno, guardado em cache.
+        `car_summary()` lê tabelas pequenas, calculadas na publicação, com a contagem de
+        imóveis e a área declarada por UF, situação, porte, tipo, etapa da análise e ano de
+        criação do cadastro. O argumento `by` escolhe as dimensões; `None` dá o total.
         """,
         """
-        mun = carbr.car_municipalities("PE")
+        print(carbr.car_summary(None))
+
+        carbr.car_summary("size_class")
+        """,
+    ),
+    (
+        """
+        Os pequenos imóveis, de até quatro módulos fiscais, são mais de nove em cada dez
+        cadastros e um terço da área declarada. Por UF:
+        """,
+        """
+        by_state = carbr.car_summary(["state", "size_class"])
+        wide = by_state.pivot(index="state", columns="size_class", values="properties").fillna(0)
+        wide = wide.loc[wide.sum(axis=1).sort_values().index, ["small", "medium", "large"]] / 1e3
+        wide.columns = ["Pequeno (até 4 módulos fiscais)", "Médio (4 a 15)", "Grande (acima de 15)"]
+
+        ax = wide.plot.barh(stacked=True, figsize=(7, 6.5), width=0.8,
+                            color=["#8fbf9f", "#3d8a5c", "#123a23"])
+        ax.set_title("Imóveis declarados no CAR, por UF e porte")
+        ax.set_xlabel("Milhares de imóveis")
+        ax.set_ylabel("")
+        ax.legend(frameon=False, loc="lower right")
+
+        fig("estados")
+        """,
+    ),
+    (
+        "A etapa da análise mostra onde o cadastro está parado:",
+        """
+        cond = carbr.car_summary("condition").sort_values("properties", ascending=False)
+        cond["share"] = (100 * cond["properties"] / cond["properties"].sum()).round(1)
+
+        print(cond[["condition", "properties", "share"]].head(8).to_string(index=False))
+        """,
+    ),
+    (
+        "E o ano de criação dá a linha do tempo do cadastramento:",
+        """
+        years = carbr.car_summary("created_year")
+        ax = (years.set_index("created_year")["properties"] / 1e3).plot.bar(
+            figsize=(7, 3.6), color="#1f5f3a", width=0.85, rot=0)
+        ax.set_title("Cadastros hoje no CAR, por ano de criação (último ano incompleto)")
+        ax.set_xlabel("")
+        ax.set_ylabel("Milhares de imóveis")
+
+        fig("anos")
+        """,
+    ),
+    (
+        "As dimensões combinam, e `state` restringe a uma ou mais UFs:",
+        """
+        carbr.car_summary(["status", "size_class"], state=["PE", "BA"])
+        """,
+    ),
+    (
+        """
+        ## Resumo por município
+
+        O resumo municipal também é pré-calculado. Sem argumento, traz os municípios de
+        todas as UFs.
+        """,
+        """
+        mun = carbr.car_municipalities()
 
         mun.sort_values("properties", ascending=False)[
-            ["municipality", "properties", "small_properties", "area_ha", "pending"]
+            ["state", "municipality", "properties", "small_properties", "area_ha", "pending"]
         ].head(6)
         """,
     ),
@@ -138,8 +203,9 @@ PRIMEIROS_PASSOS = [
         ## Imóveis de um município
 
         Os filtros de `car_properties()` são aplicados antes da leitura. Aqui, os imóveis
-        médios e grandes de Petrolina — algumas centenas, de um arquivo com mais de 400 mil.
-        Com o extra `geo` instalado, o resultado é um GeoDataFrame em SIRGAS 2000.
+        médios e grandes de Petrolina, em Pernambuco — algumas centenas, de um arquivo com
+        mais de 400 mil. Com o extra `geo` instalado, o resultado é um GeoDataFrame em
+        SIRGAS 2000.
         """,
         """
         petrolina = carbr.car_properties(
@@ -184,11 +250,12 @@ PRIMEIROS_PASSOS = [
         """
         ## Que imóveis estão declarados aqui?
 
-        `car_at()` devolve os imóveis que contêm um ponto. Como o cadastro é autodeclarado,
-        sobreposições são comuns e o resultado pode ter mais de uma linha.
+        `car_at()` devolve os imóveis que contêm um ponto, procurando em todas as UFs (ou só
+        nas de `state`). Como o cadastro é autodeclarado, sobreposições são comuns e o
+        resultado pode ter mais de uma linha, como neste ponto do Distrito Federal:
         """,
         """
-        here = carbr.car_at(lon=-40.5, lat=-9.2, geometry=False)
+        here = carbr.car_at(lon=-47.9, lat=-15.8, geometry=False)
 
         print(here[["property_code", "municipality", "area_ha", "status", "condition"]].T)
         """,
@@ -205,14 +272,15 @@ PRIMEIROS_PASSOS = [
         """
         ## Consultas próprias
 
-        `car_tbl()` devolve uma relação preguiçosa do DuckDB sobre os arquivos publicados.
-        Nada é lido até o `.df()`, e a agregação roda sobre o arquivo remoto lendo só as
-        colunas usadas.
+        Para o que `car_summary()` não cobre, `car_tbl()` devolve uma relação preguiçosa do
+        DuckDB sobre os arquivos publicados. Nada é lido até o `.df()`, e a consulta roda
+        sobre o arquivo remoto lendo só as colunas usadas. Convém restringir a uma UF: sobre
+        o país inteiro, uma agregação lê colunas de 8,6 milhões de linhas e leva minutos.
         """,
         """
-        carbr.car_tbl("PE").aggregate(
-            "size_class, count(*) AS properties, round(sum(area_ha)) AS area_ha"
-        ).order("properties DESC").df()
+        carbr.car_tbl("PE").filter("fiscal_modules > 15 AND status = 'active'").aggregate(
+            "municipality, count(*) AS properties, round(sum(area_ha)) AS area_ha"
+        ).order("area_ha DESC").limit(5).df()
         """,
     ),
     (
@@ -225,12 +293,14 @@ PRIMEIROS_PASSOS = [
 
         O pacote lê de um bucket público. Para usar um espelho compatível com S3 ou uma cópia
         local da publicação, chame `carbr.set_base_url()` ou defina a variável de ambiente
-        `CAR_URL`. O catálogo e o resumo municipal ficam em cache em `carbr.car_cache_dir()`;
-        os imóveis nunca são copiados para o disco.
+        `CAR_URL`. O catálogo e os resumos ficam em cache em `carbr.car_cache_dir()`, e o
+        catálogo vale por seis horas (`car_catalog(refresh=True)` o relê); os imóveis nunca
+        são copiados para o disco.
         """,
         None,
     ),
 ]
+
 
 if __name__ == "__main__":
     page("primeiros-passos.md", PRIMEIROS_PASSOS)

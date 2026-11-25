@@ -29,7 +29,7 @@ def release(tmp_path):
         "condition": "Aguardando análise",
         "property_type_code": "IRU",
         "property_type": "rural_property",
-        "created_at": pd.Timestamp("2020-01-01", tz="UTC"),
+        "created_at": pd.Timestamp("2020-06-01", tz="UTC"),
         "area_ha": [10.0, 20.0, 30.0, 40.0, 50.0, 6000.0],
         "fiscal_modules": [0.2, 0.4, 0.6, 5.0, 6.0, 100.0],
         "size_class": ["small"] * 3 + ["medium"] * 2 + ["large"],
@@ -62,6 +62,13 @@ def release(tmp_path):
                 count(*) FILTER (NOT geometry_valid) AS invalid_geometries,
                 min(xmin) AS xmin, min(ymin) AS ymin, max(xmax) AS xmax, max(ymax) AS ymax
               FROM props GROUP BY ALL) TO '{f_mun}' (FORMAT parquet)""")
+    (tmp_path / "summary").mkdir()
+    f_sum = tmp_path / "summary" / "state=PE.parquet"
+    con.execute(f"""
+        COPY (SELECT state, status, size_class, property_type, condition,
+                year(created_at)::INTEGER AS created_year, count(*) AS properties,
+                sum(area_ha) AS area_ha
+              FROM props GROUP BY ALL) TO '{f_sum}' (FORMAT parquet)""")
     (tmp_path / "catalog.json").write_text(json.dumps({
         "version": "2026-01-01",
         "source": {"name": "teste"},
@@ -70,6 +77,7 @@ def release(tmp_path):
         "files": [
             {"path": "properties/state=PE/part-0.parquet", "sha256": _sha(f_props)},
             {"path": "municipalities/state=PE.parquet", "sha256": _sha(f_mun)},
+            {"path": "summary/state=PE.parquet", "sha256": _sha(f_sum)},
         ],
     }))
     (tmp_path / "dictionary.json").write_text(json.dumps(

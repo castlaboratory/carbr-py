@@ -27,6 +27,7 @@ Sem o extra `geo`, a geometria vem em WKB e `car_at()` não está disponível.
 import carbr
 
 carbr.car_catalog()                       # UFs publicadas, versão e qualidade da carga
+carbr.car_summary(["state", "size_class"])   # totais do país, sem ler os imóveis
 carbr.car_municipalities("PE")            # resumo por município
 
 # Imóveis grandes de Petrolina, como GeoDataFrame
@@ -47,7 +48,8 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 - **Origem:** serviço público do Sicar, do Serviço Florestal Brasileiro. O cadastro é
   autodeclarado: há sobreposições entre imóveis, e a presença no CAR não comprova domínio.
 - **Conteúdo:** o perímetro declarado e dez atributos de cada imóvel. Não há dado pessoal.
-- **Cobertura:** por enquanto, Pernambuco. `car_catalog()` mostra o que está publicado e a data.
+- **Cobertura:** as 27 UFs, cerca de 8,6 milhões de imóveis. `car_catalog()` mostra o que está
+  publicado e a data.
 - **Endereço:** o padrão é um bucket público; `carbr.set_base_url()` ou a variável `CAR_URL`
   apontam para um espelho compatível com S3 ou para uma pasta local.
 

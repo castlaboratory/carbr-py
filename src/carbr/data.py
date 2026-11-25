@@ -160,6 +160,53 @@ def car_municipalities(state: str | Iterable[str] | None = None) -> pd.DataFrame
     return _client.con().execute("SELECT * FROM rel ORDER BY municipality_code").df()
 
 
+_DIMS = ("state", "status", "size_class", "property_type", "condition", "created_year")
+
+
+def car_summary(by: str | Iterable[str] | None = "state",
+                state: str | Iterable[str] | None = None) -> pd.DataFrame:
+    """Resumo pré-calculado.
+
+    Contagem de imóveis e área declarada por qualquer combinação de UF,
+    situação, porte, tipo, etapa da análise e ano de criação do cadastro. Lê
+    tabelas pequenas, calculadas na publicação e guardadas em cache: responde
+    em segundos mesmo para o país inteiro, sem ler os imóveis.
+
+    Parameters
+    ----------
+    by
+        Dimensões do resumo, uma ou mais de ``"state"``, ``"status"``,
+        ``"size_class"``, ``"property_type"``, ``"condition"`` e
+        ``"created_year"``. ``None`` devolve uma linha só, com o total.
+    state
+        Sigla de uma ou mais UFs; ``None`` traz todas as publicadas.
+
+    Returns
+    -------
+    pandas.DataFrame
+        As colunas de ``by``, ``properties`` (número de imóveis) e ``area_ha``
+        (área declarada, em hectares).
+    """
+    by = _choices(by, _DIMS, "by")
+    empty = pd.DataFrame(columns=[*by, "properties", "area_ha"])
+    cat = _client.catalog_json()
+    if cat is None:
+        return empty
+    paths = [f"summary/state={s}.parquet" for s in _states(state, cat)]
+    if not set(paths) <= {f["path"] for f in cat["files"]}:
+        # A catalogue cached before the summary was published.
+        cat = _client.catalog_json(refresh=True)
+        if cat is None:
+            return empty
+    files = [_client.cached_file(cat, p) for p in paths]
+    if any(f is None for f in files):
+        return empty
+    rel = _client.con().read_parquet([str(f) for f in files])  # noqa: F841
+    cols = ", ".join([*by, "sum(properties)::BIGINT AS properties", "sum(area_ha) AS area_ha"])
+    group = f" GROUP BY {', '.join(by)} ORDER BY {', '.join(by)}" if by else ""
+    return _client.con().execute(f"SELECT {cols} FROM rel{group}").df()
+
+
 def _municipality_codes(municipality, states: list[str]) -> list[int]:
     values = _as_list(municipality)
     if all(isinstance(v, int) or re.fullmatch(r"[0-9]{7}", str(v)) for v in values):

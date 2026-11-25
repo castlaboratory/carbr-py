@@ -17,6 +17,21 @@ def test_catalogue_dictionary_and_municipal_summary(release):
     assert list(mun["properties"]) == [4, 2]
 
 
+def test_summary_aggregates_the_precomputed_table(release):
+    by_size = carbr.car_summary("size_class")
+    assert list(by_size["size_class"]) == ["large", "medium", "small"]
+    assert list(by_size["properties"]) == [1, 2, 3]
+    assert list(by_size["area_ha"]) == [6000, 90, 60]
+    total = carbr.car_summary(None)
+    assert total.shape == (1, 2) and total["properties"].iloc[0] == 6
+    two = carbr.car_summary(["state", "status"], state="PE")
+    assert list(two.columns) == ["state", "status", "properties", "area_ha"]
+    assert two["properties"].sum() == 6
+    assert list(carbr.car_summary("created_year")["created_year"]) == [2020]
+    with pytest.raises(ValueError):
+        carbr.car_summary("municipality")
+
+
 def test_properties_filters(release):
     assert len(carbr.car_properties("PE", geometry=False)) == 6
     assert len(carbr.car_properties("pe", municipality="PETROLINA", geometry=False)) == 4
