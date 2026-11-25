@@ -1,5 +1,10 @@
 # Novidades
 
+## Em desenvolvimento
+
+- `car_typology()` e `car_typology_groups()`: tipologia dos municípios em cinco grupos, pelo perfil
+  do cadastro (porte dos imóveis, etapa da análise e sobreposição).
+
 ## 0.5.0
 
 - `car_check()` passa a considerar a sobreposição com terras indígenas (Funai) e unidades de

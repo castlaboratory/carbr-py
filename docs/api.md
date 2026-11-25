@@ -28,6 +28,12 @@
 
 ::: carbr.car_quality_summary
 
+## Tipologia dos municípios
+
+::: carbr.car_typology
+
+::: carbr.car_typology_groups
+
 ## Citar
 
 ::: carbr.car_cite

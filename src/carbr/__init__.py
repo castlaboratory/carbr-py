@@ -38,6 +38,8 @@ from .data import (
     car_property,
     car_quality,
     car_quality_summary,
+    car_typology,
+    car_typology_groups,
     car_summary,
     car_tbl,
 )
@@ -61,6 +63,8 @@ __all__ = [
     "car_property",
     "car_quality",
     "car_quality_summary",
+    "car_typology",
+    "car_typology_groups",
     "car_summary",
     "car_tbl",
     "set_base_url",

@@ -103,6 +103,15 @@ def release(tmp_path):
                 count(*) FILTER (sustainable_use_share > 0.01) AS sustainable_use,
                 sum(p.area_ha * sustainable_use_share) AS sustainable_use_ha
               FROM quality q JOIN props p USING (property_code) GROUP BY ALL) TO '{f_qm}' (FORMAT parquet)""")
+    (tmp_path / "typology").mkdir()
+    f_typ = tmp_path / "typology" / "municipalities.parquet"
+    con.execute(f"""
+        COPY (SELECT * FROM (VALUES
+                ('PE', 2611101, 'Petrolina', 'overlapping', 'Muita sobreposição', 4, 0.75, 0.9, 0.75, 0.0, 0.25, 0.5, 0.4),
+                ('PE', 2611606, 'Recife', 'few', 'Poucos cadastros', 1, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.01))
+              t(state, municipality_code, municipality, typology, typology_label, properties, small_share,
+                large_area_share, waiting_share, notified_share, analysed_share, overlap_share, coverage))
+        TO '{f_typ}' (FORMAT parquet)""")
     (tmp_path / "catalog.json").write_text(json.dumps({
         "version": "2026-01-01",
         "source": {"name": "teste"},
@@ -114,7 +123,13 @@ def release(tmp_path):
             {"path": "summary/state=PE.parquet", "sha256": _sha(f_sum)},
             {"path": "quality/state=PE.parquet", "sha256": _sha(f_q)},
             {"path": "quality-municipalities/state=PE.parquet", "sha256": _sha(f_qm)},
+            {"path": "typology/municipalities.parquet", "sha256": _sha(f_typ)},
         ],
+        "typology": {"of": "2026-01-01", "groups": [
+            {"code": "overlapping", "label": "Muita sobreposição", "description": "Teste.",
+             "municipalities": 1, "properties": 4},
+            {"code": "few", "label": "Poucos cadastros", "description": "Teste.",
+             "municipalities": 1, "properties": 1}]},
     }))
     (tmp_path / "dictionary.json").write_text(json.dumps(
         [{"column": "property_code", "sicar_name": "cod_imovel", "description": "Código"}]))

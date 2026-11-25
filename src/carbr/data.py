@@ -644,3 +644,76 @@ def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFram
     out = _client.con().execute("SELECT * FROM rel ORDER BY municipality_code").df()
     names = car_municipalities(states)[["municipality_code", "municipality"]]
     return out.merge(names, on="municipality_code", how="left").reindex(columns=_QUALITY_SUMMARY)
+
+
+_TYPOLOGY = ["state", "municipality_code", "municipality", "typology", "typology_label", "properties",
+             "small_share", "large_area_share", "waiting_share", "notified_share", "analysed_share",
+             "overlap_share", "coverage"]
+_TYPOLOGY_GROUPS = ["typology", "typology_label", "description", "municipalities", "properties"]
+
+
+def car_typology(state: str | Iterable[str] | None = None) -> pd.DataFrame:
+    """Tipologia dos municípios.
+
+    Cada município entra num de cinco grupos, pelo perfil do seu cadastro: o porte dos
+    imóveis, em que etapa a análise está e quanto os cadastros se sobrepõem. Os grupos são
+    achados por agrupamento (k-médias) sobre sete indicadores e ficam fixos de uma
+    atualização para a outra, de modo que dá para acompanhar um município mudando de grupo.
+    Municípios com menos de 30 imóveis não cancelados ficam em ``"few"``.
+
+    Os indicadores, todos sobre os imóveis não cancelados do município:
+
+    - ``small_share``: parcela de imóveis pequenos (até 4 módulos fiscais);
+    - ``large_area_share``: parcela da área declarada que está em imóveis grandes;
+    - ``waiting_share``, ``notified_share`` e ``analysed_share``: parcela aguardando
+      análise, notificada sem resposta e já analisada ou em análise;
+    - ``overlap_share``: parcela com mais da metade da área sobreposta a outros cadastros;
+    - ``coverage``: área declarada dividida pela área do município (limitada a 2).
+
+    Parameters
+    ----------
+    state
+        Sigla de uma ou mais UFs; ``None`` traz o país inteiro.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Uma linha por município: ``state``, ``municipality_code``, ``municipality``,
+        ``typology`` (o código do grupo), ``typology_label`` (o nome), ``properties`` e
+        os sete indicadores. O que cada grupo quer dizer está em
+        :func:`car_typology_groups`.
+    """
+    empty = pd.DataFrame(columns=_TYPOLOGY)
+    cat = _client.catalog_json()
+    if cat is None:
+        return empty
+    states = _states(state, cat)
+    path = "typology/municipalities.parquet"
+    if path not in {f["path"] for f in cat["files"]}:
+        cat = _client.catalog_json(refresh=True)
+        if cat is None or path not in {f["path"] for f in cat["files"]}:
+            warnings.warn("This publication has no typology; returning an empty result.",
+                          _client.CarWarning, stacklevel=2)
+            return empty
+    file = _client.cached_file(cat, path)
+    if file is None:
+        return empty
+    rel = _client.con().read_parquet(str(file))  # noqa: F841
+    out = _client.con().execute("SELECT * FROM rel ORDER BY municipality_code").df()
+    return out[out["state"].isin(states)].reindex(columns=_TYPOLOGY).reset_index(drop=True)
+
+
+def car_typology_groups() -> pd.DataFrame:
+    """Os grupos da tipologia dos municípios.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Uma linha por grupo: ``typology`` (o código), ``typology_label`` (o nome),
+        ``description`` (o que o distingue), ``municipalities`` e ``properties`` (quantos
+        municípios e imóveis estão nele na publicação atual).
+    """
+    cat = _client.catalog_json()
+    groups = (cat or {}).get("typology", {}).get("groups", [])
+    out = pd.DataFrame(groups).rename(columns={"code": "typology", "label": "typology_label"})
+    return out.reindex(columns=_TYPOLOGY_GROUPS)

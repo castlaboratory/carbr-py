@@ -204,3 +204,16 @@ def test_quality_indicators_per_property_and_per_municipality(release):
     assert list(s["indigenous"]) == [1, 0] and s["indigenous_ha"].iloc[0] == pytest.approx(16.0)
     assert list(s["strict_protection"]) == [1, 0] and list(s["sustainable_use"]) == [1, 0]
     assert len(carbr.car_quality_summary()) == 2
+
+
+def test_typology_of_municipalities_and_its_groups(release):
+    t = carbr.car_typology()
+    assert list(t["municipality"]) == ["Petrolina", "Recife"]
+    assert list(t["typology"]) == ["overlapping", "few"]
+    assert t.loc[0, "typology_label"] == "Muita sobreposição" and t.loc[0, "overlap_share"] == 0.5
+    assert list(t.columns)[:6] == ["state", "municipality_code", "municipality", "typology",
+                                   "typology_label", "properties"]
+    assert len(carbr.car_typology("PE")) == 2
+    groups = carbr.car_typology_groups()
+    assert list(groups["typology"]) == ["overlapping", "few"]
+    assert list(groups.columns) == ["typology", "typology_label", "description", "municipalities", "properties"]
