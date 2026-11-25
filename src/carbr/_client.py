@@ -20,7 +20,7 @@ from . import _msg
 _TIMEOUT = 60.0
 _MAX_TRIES = 3
 _CATALOG_MAX_AGE = 6 * 3600
-DEFAULT_URL = "https://pub-9fa571ccff7d4c61a60e0b25b754ff6d.r2.dev/current"
+DEFAULT_URL = "https://car.castlab.org/current"
 _BASE_URL: str | None = None
 _CON: duckdb.DuckDBPyConnection | None = None
 _HTTPFS = False
