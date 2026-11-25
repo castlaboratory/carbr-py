@@ -53,6 +53,17 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 - **Origem:** serviço público do Sicar, do Serviço Florestal Brasileiro. O cadastro é
   autodeclarado: há sobreposições entre imóveis, e a presença no CAR não comprova domínio.
 - **Conteúdo:** o perímetro declarado e dez atributos de cada imóvel. Não há dado pessoal.
+- **Base normativa:** a Instrução Normativa MMA nº 3, de 18/12/2014, garante o livre acesso às
+  informações não sigilosas e não pessoais do Sicar (arts. 12 e 18). São sigilosas as que
+  identificam proprietários ou possuidores ou os associam aos imóveis (art. 4º); nenhuma delas
+  está nesta publicação.
+- **Finalidade:** pela mesma norma (art. 2º), as informações do CAR se destinam a subsidiar
+  políticas, programas, projetos e atividades de controle, monitoramento, planejamento ambiental
+  e econômico e combate ao desmatamento. O uso para outros fins que cause dano a terceiros pode
+  gerar responsabilização.
+- **Sem caráter oficial:** é uma republicação independente, feita pelo CastLab/UFPE. Não é um
+  produto do Serviço Florestal Brasileiro nem substitui o Sicar; em caso de divergência, vale o
+  Sicar.
 - **Cobertura:** as 27 UFs, cerca de 8,6 milhões de imóveis. `car_catalog()` mostra o que está
   publicado e a data.
 - **Endereço:** o padrão é um bucket público; `carbr.set_base_url()` ou a variável `CAR_URL`
