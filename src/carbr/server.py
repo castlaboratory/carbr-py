@@ -28,6 +28,8 @@ from .data import (
     car_check,
     car_dictionary,
     car_municipalities,
+    car_quality,
+    car_quality_summary,
     car_summary,
     car_tbl,
 )
@@ -51,6 +53,9 @@ Ao responder com estes dados:
 - Porte (`size_class`): small = até 4 módulos fiscais; medium = de 4 a 15; large = acima
   de 15. Assentamentos e territórios tradicionais aparecem como "small" mesmo quando grandes.
 - Para totais do país ou de um estado, use `resumo`; para um município, `municipio`.
+- Qualidade (`qualidade`): `overlap_share` é a parcela da área do imóvel sobreposta a outros
+  imóveis do estado; `outside_share`, a parcela fora do município declarado. Sobreposição não é
+  sinônimo de disputa: inclui imóvel declarado duas vezes e lote dentro de assentamento.
 """
 
 STAGE_LABELS = {
@@ -160,7 +165,40 @@ def municipio(uf: str, nome: str) -> dict[str, Any]:
                            percentual=(100 * stages["properties"] / stages["properties"].sum()).round(1))
     summary = _records(match.drop(columns=["xmin", "ymin", "xmax", "ymax"]))[0]
     return _envelope(encontrado=True, municipio=summary,
-                     etapas=_records(stages.sort_values("properties", ascending=False)))
+                     etapas=_records(stages.sort_values("properties", ascending=False)),
+                     qualidade=_town_quality(uf, int(row["municipality_code"])))
+
+
+def _town_quality(uf: str, code: int) -> dict[str, Any] | None:
+    """Indicadores de qualidade de um município, ou `None` se a publicação não os traz."""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        towns = car_quality_summary(uf)
+    row = towns[towns["municipality_code"] == code]
+    if row.empty:
+        return None
+    r = _records(row.drop(columns=["state", "municipality_code", "municipality"]))[0]
+    n = r["properties"] or 1
+    r["percentual_com_sobreposicao"] = round(100 * r["overlapping"] / n, 1)
+    r["percentual_com_mais_da_metade_sobreposta"] = round(100 * r["overlapping_half"] / n, 1)
+    r["percentual_com_mais_da_metade_fora_do_municipio"] = round(100 * r["outside_half"] / n, 1)
+    return r
+
+
+def _property_quality(df: pd.DataFrame) -> pd.DataFrame:
+    """Indicadores de qualidade dos imóveis de `df` (vazio se a publicação não os traz)."""
+    import warnings
+
+    columns = ["property_code", "overlap_count", "overlap_share", "outside_share"]
+    parts = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for uf, group in df.groupby("state"):
+            q = car_quality(uf, municipality=sorted({int(c) for c in group["municipality_code"]}))
+            parts.append(q[q["property_code"].isin(group["property_code"])][columns])
+    return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=columns)
 
 
 def imoveis_no_ponto(lon: float, lat: float) -> dict[str, Any]:
@@ -170,8 +208,10 @@ def imoveis_no_ponto(lon: float, lat: float) -> dict[str, Any]:
     """
     df = car_at(lon, lat, geometry=False)
     df = df.assign(etapa=df["condition"].map(_stage))
+    df = df.merge(_property_quality(df), on="property_code", how="left")
     columns = ["property_code", "municipality", "state", "status", "condition", "etapa",
-               "property_type", "size_class", "area_ha", "fiscal_modules", "created_at"]
+               "property_type", "size_class", "area_ha", "fiscal_modules", "created_at",
+               "overlap_count", "overlap_share", "outside_share"]
     return _envelope(imoveis=_records(df[columns]), quantidade=len(df), sobreposicao=len(df) > 1)
 
 
