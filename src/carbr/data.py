@@ -359,3 +359,127 @@ def car_at(lon: float, lat: float, state=None, geometry: bool = True):
     if not geometry:
         return pd.DataFrame(out.drop(columns="geometry"))
     return out
+
+
+_NOTES = {
+    "invalid": "Texto fora do formato de um código do CAR.",
+    "not_found": "Código não encontrado nesta publicação.",
+}
+
+
+def _stage(condition) -> str | None:
+    """Etapa da análise a partir da situação informada pelo Sicar."""
+    if not isinstance(condition, str):
+        return None
+    if condition.startswith("Cancelado"):
+        return "cancelled"
+    if condition == "Aguardando análise":
+        return "waiting"
+    if condition == "Em análise":
+        return "analysing"
+    if "aguardando atendimento a notificação" in condition:
+        return "notified"
+    if "após revisão" in condition:
+        return "answered"
+    return "done"
+
+
+def _verdict(row) -> tuple[str, str]:
+    status, stage = row["status"], row["stage"]
+    if status == "cancelled" or stage == "cancelled":
+        return "blocked", "Cadastro cancelado."
+    if status == "suspended":
+        return "blocked", "Cadastro suspenso."
+    if stage == "notified":
+        return "attention", "Analisado, com notificação sem resposta do declarante."
+    if status == "pending":
+        return "attention", "Cadastro pendente."
+    if not isinstance(status, str):
+        return "attention", "Situação não reconhecida."
+    return "ok", "Cadastro ativo, sem notificação pendente."
+
+
+def car_check(code: str | Iterable[str]) -> pd.DataFrame:
+    """Verificar vários imóveis de uma vez.
+
+    Para uma lista de códigos, diz o que consta de cada um na camada pública
+    do CAR e resume em um resultado: a triagem que antecede, por exemplo, a
+    análise de um pedido de crédito rural. Os códigos são agrupados por UF e
+    município, de modo que uma lista grande lê poucos trechos de cada arquivo.
+
+    O resultado (``check``) é uma classificação do pacote, não uma regra
+    oficial:
+
+    - ``"ok"``: cadastro ativo, sem notificação pendente;
+    - ``"attention"``: cadastro pendente, ou analisado com notificação ainda
+      sem resposta do declarante;
+    - ``"blocked"``: cadastro cancelado ou suspenso;
+    - ``"not_found"``: código que não está na publicação (pode ter sido
+      cadastrado depois da última atualização);
+    - ``"invalid"``: texto que não tem o formato de um código do CAR.
+
+    A verificação diz só o que a camada pública traz. Não cobre embargos,
+    sobreposição com terras indígenas ou unidades de conservação, nem
+    substitui a consulta oficial ao Sicar.
+
+    Parameters
+    ----------
+    code
+        Códigos de imóvel no CAR (``UF-0000000-identificador``).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Uma linha por código, na ordem dada: ``property_code``, ``check``,
+        ``note`` (o motivo, em português), ``stage`` (``"waiting"``,
+        ``"analysing"``, ``"notified"``, ``"answered"``, ``"done"`` ou
+        ``"cancelled"``), ``status``, ``condition``, ``property_type``,
+        ``size_class``, ``area_ha``, ``fiscal_modules``, ``state``,
+        ``municipality`` e ``created_at``.
+    """
+    codes = list(dict.fromkeys(str(c).strip().upper() for c in _as_list(code) if str(c).strip()))
+    columns = ["property_code", "status", "condition", "property_type", "size_class",
+               "area_ha", "fiscal_modules", "state", "municipality", "created_at"]
+    order = ["property_code", "check", "note", "stage", *columns[1:]]
+    if not codes:
+        return pd.DataFrame(columns=order)
+    valid = [c for c in codes if _CODE.match(c)]
+    parts = []
+    cat = _client.catalog_json() if valid else None
+    if cat is not None:
+        for uf in dict.fromkeys(c[:2] for c in valid):
+            if uf not in cat["states"]:
+                continue
+            wanted = [c for c in valid if c[:2] == uf]
+            rel = _relation(cat, [uf]).project(", ".join([*columns, "municipality_code"]))
+            marks = ", ".join("?" * len(wanted))
+            towns = sorted({int(c[3:10]) for c in wanted})
+            # The code carries the municipality: that filter reads a few row groups.
+            part = _collect(rel, [f"municipality_code IN ({', '.join('?' * len(towns))})",
+                                  f"property_code IN ({marks})"], [*towns, *wanted], True)
+            if part is None:
+                continue
+            left = [c for c in wanted if c not in set(part["property_code"])]
+            if left:
+                # A few properties sit in another municipality than the code says.
+                more = _collect(rel, [f"property_code IN ({', '.join('?' * len(left))})"], left, True)
+                if more is not None and len(more):
+                    part = pd.concat([part, more], ignore_index=True)
+            parts.append(part[columns])
+    found = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=columns)
+    found["property_code"] = found["property_code"].astype(object)
+    out = pd.DataFrame({"property_code": pd.Series(codes, dtype=object)}).merge(
+        found, on="property_code", how="left")
+    out["stage"] = out["condition"].map(_stage)
+    checks, notes = [], []
+    for _, row in out.iterrows():
+        if not _CODE.match(row["property_code"]):
+            verdict = ("invalid", _NOTES["invalid"])
+        elif not isinstance(row["state"], str):
+            verdict = ("not_found", _NOTES["not_found"])
+        else:
+            verdict = _verdict(row)
+        checks.append(verdict[0])
+        notes.append(verdict[1])
+    out["check"], out["note"] = checks, notes
+    return out[order]

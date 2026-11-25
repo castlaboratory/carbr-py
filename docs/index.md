@@ -45,6 +45,7 @@ carbr.car_properties("PE", status="pending", geometry=False)
 
 carbr.car_at(lon=-40.5, lat=-9.2)         # que imóveis estão declarados neste ponto?
 carbr.car_property("PE-2611101-588BC484570D440484F527F07DF5AFFA")
+carbr.car_check(codigos)                  # triagem de uma lista de códigos
 
 # Qualquer outra consulta, direto no arquivo remoto
 carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()

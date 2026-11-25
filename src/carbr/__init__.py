@@ -31,6 +31,7 @@ from .cite import car_cite
 from .data import (
     car_at,
     car_catalog,
+    car_check,
     car_dictionary,
     car_municipalities,
     car_properties,
@@ -50,6 +51,7 @@ __all__ = [
     "car_cache_clear",
     "car_cache_dir",
     "car_catalog",
+    "car_check",
     "car_cite",
     "car_dictionary",
     "car_municipalities",

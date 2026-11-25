@@ -1,5 +1,10 @@
 # Novidades
 
+## Em desenvolvimento
+
+- `car_check()`: verifica uma lista de códigos de imóvel de uma vez e resume o que consta de cada um
+  (`ok`, `attention`, `blocked`, `not_found`, `invalid`).
+
 ## 0.1.3
 
 - Júlia Nascimento Barreto entra na lista de autores. Sem mudança no código.

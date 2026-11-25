@@ -139,3 +139,27 @@ def test_file_updated_in_place_is_accepted_after_rereading_the_catalogue(release
     shutil.rmtree(cache / "2026-01-01")
     with pytest.raises(carbr.IntegrityError):
         carbr.car_municipalities("PE")
+
+
+def test_check_classifies_a_batch_of_codes(release):
+    codes = [
+        f"PE-2611101-{3:032X}",      # pending
+        "not a code",
+        f"pe-2611606-{5:032X}",      # cancelled, lower case
+        f"PE-2611606-{99:032X}",     # not in the publication
+        f"PE-2611101-{1:032X}",      # active
+        f"PE-2600054-{4:032X}",      # another municipality in the code
+        f"SP-3550308-{1:032X}",      # a state that is not published
+    ]
+    out = carbr.car_check([*codes, codes[0]])
+    assert len(out) == 7
+    assert list(out["property_code"]) == [c.upper() for c in codes]
+    assert list(out["check"]) == ["attention", "invalid", "blocked", "not_found", "ok", "not_found", "not_found"]
+    assert list(out["stage"].iloc[[0, 4]]) == ["waiting", "waiting"]
+    assert list(out["area_ha"].iloc[[0, 2, 4]]) == [30, 50, 10]
+    assert out["state"].iloc[[1, 3, 5, 6]].isna().all()
+    assert "cancelado" in out["note"].iloc[2]
+    assert list(out.columns) == ["property_code", "check", "note", "stage", "status", "condition",
+                                 "property_type", "size_class", "area_ha", "fiscal_modules", "state",
+                                 "municipality", "created_at"]
+    assert len(carbr.car_check([])) == 0
