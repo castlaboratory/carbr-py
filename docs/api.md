@@ -22,6 +22,12 @@
 
 ::: carbr.car_tbl
 
+## Qualidade do cadastro
+
+::: carbr.car_quality
+
+::: carbr.car_quality_summary
+
 ## Citar
 
 ::: carbr.car_cite

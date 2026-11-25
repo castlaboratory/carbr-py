@@ -244,3 +244,15 @@ def property_files(cat: dict, states: list[str]) -> list[str]:
         _need_httpfs()
         return [f"{base}/{quote(p)}" for p in keep]
     return [str(Path(base) / p) for p in keep]
+
+
+def data_files(cat: dict, prefix: str, states: list[str]) -> list[str]:
+    """Addresses of the per-state files `<prefix>/state=<UF>.parquet` that the catalogue lists."""
+    base = base_url()
+    start = f"{prefix}/state="
+    keep = [f["path"] for f in cat["files"]
+            if f["path"].startswith(start) and f["path"][len(start):len(start) + 2] in states]
+    if is_remote(base):
+        _need_httpfs()
+        return [f"{base}/{quote(p)}" for p in keep]
+    return [str(Path(base) / p) for p in keep]

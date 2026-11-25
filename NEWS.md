@@ -1,5 +1,10 @@
 # Novidades
 
+## Em desenvolvimento
+
+- `car_quality()` e `car_quality_summary()`: indicadores de qualidade do cadastro, por imóvel e por
+  município (sobreposição com outros imóveis e área fora do município declarado).
+
 ## 0.3.0
 
 - Servidor MCP (`carbr-mcp`, extra `mcp`): oito ferramentas de consulta ao CAR para assistentes.

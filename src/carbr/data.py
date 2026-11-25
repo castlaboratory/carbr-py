@@ -483,3 +483,93 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
         notes.append(verdict[1])
     out["check"], out["note"] = checks, notes
     return out[order]
+
+
+_QUALITY = ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share"]
+_QUALITY_SUMMARY = ["state", "municipality_code", "municipality", "properties", "overlapping",
+                    "overlapping_half", "overlap_ha", "outside_half", "outside_ha"]
+
+
+def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
+    """Indicadores de qualidade por imóvel.
+
+    Dois sinais de inconsistência do cadastro, calculados na publicação para cada imóvel
+    não cancelado:
+
+    - ``overlap_count`` e ``overlap_share``: com quantos outros imóveis do estado ele
+      divide área, e que parcela da área dele está sobreposta (a soma das interseções
+      com cada vizinho, limitada a 1);
+    - ``outside_share``: que parcela da área fica fora do município declarado, pela
+      malha municipal do IBGE.
+
+    Sobreposição não é sinônimo de disputa: inclui imóvel declarado duas vezes e lote
+    dentro de assentamento. A comparação é só entre imóveis do mesmo estado.
+
+    Parameters
+    ----------
+    state
+        Sigla de uma ou mais UFs.
+    municipality
+        Nomes ou códigos IBGE (7 dígitos) de municípios; lê só os trechos deles.
+
+    Returns
+    -------
+    pandas.DataFrame
+        ``property_code``, ``municipality_code``, ``overlap_count``, ``overlap_share`` e
+        ``outside_share``. Junte a :func:`car_properties` por ``property_code``.
+    """
+    cat = _client.catalog_json()
+    if cat is None:
+        return pd.DataFrame(columns=_QUALITY)
+    states = _states(state, cat)
+    files = _client.data_files(cat, "quality", states)
+    if not files:
+        cat = _client.catalog_json(refresh=True)
+        files = _client.data_files(cat, "quality", states) if cat else []
+    if not files:
+        warnings.warn("This publication has no quality indicators; returning an empty result.",
+                      _client.CarWarning, stacklevel=2)
+        return pd.DataFrame(columns=_QUALITY)
+    rel = _client.con().read_parquet(files)
+    where, params = [], []
+    if municipality is not None:
+        codes = _municipality_codes(municipality, states)
+        where.append(f"municipality_code IN ({', '.join('?' * len(codes))})")
+        params.extend(codes)
+    out = _collect(rel, where, params, True)
+    return pd.DataFrame(columns=_QUALITY) if out is None else out[_QUALITY]
+
+
+def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFrame:
+    """Indicadores de qualidade por município.
+
+    Para cada município: imóveis não cancelados (``properties``), quantos têm sobreposição
+    acima de 1% (``overlapping``) e de 50% da área (``overlapping_half``), os hectares
+    sobrepostos (``overlap_ha``, somando os dois lados de cada par), e quantos imóveis
+    (``outside_half``) e hectares (``outside_ha``) ficam fora do município declarado.
+    Arquivos pequenos, guardados em cache.
+
+    Parameters
+    ----------
+    state
+        Sigla de uma ou mais UFs; ``None`` traz todas as publicadas.
+    """
+    empty = pd.DataFrame(columns=_QUALITY_SUMMARY)
+    cat = _client.catalog_json()
+    if cat is None:
+        return empty
+    states = _states(state, cat)
+    paths = [f"quality-municipalities/state={s}.parquet" for s in states]
+    if not set(paths) <= {f["path"] for f in cat["files"]}:
+        cat = _client.catalog_json(refresh=True)
+        if cat is None or not set(paths) <= {f["path"] for f in cat["files"]}:
+            warnings.warn("This publication has no quality indicators; returning an empty result.",
+                          _client.CarWarning, stacklevel=2)
+            return empty
+    files = [_client.cached_file(cat, p) for p in paths]
+    if any(f is None for f in files):
+        return empty
+    rel = _client.con().read_parquet([str(f) for f in files])  # noqa: F841
+    out = _client.con().execute("SELECT * FROM rel ORDER BY municipality_code").df()
+    names = car_municipalities(states)[["municipality_code", "municipality"]]
+    return out.merge(names, on="municipality_code", how="left")[_QUALITY_SUMMARY]

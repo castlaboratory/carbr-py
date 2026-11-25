@@ -69,6 +69,27 @@ def release(tmp_path):
                 year(created_at)::INTEGER AS created_year, count(*) AS properties,
                 sum(area_ha) AS area_ha
               FROM props GROUP BY ALL) TO '{f_sum}' (FORMAT parquet)""")
+    # Indicadores de qualidade: o 1º imóvel está inteiro dentro do 6º; o 5º é cancelado e fica de fora.
+    quality = pd.DataFrame({  # noqa: F841
+        "property_code": [props["property_code"][i] for i in (0, 1, 2, 5, 3)],
+        "municipality_code": [2611101, 2611101, 2611101, 2611101, 2611606],
+        "overlap_count": [1, 0, 0, 1, 0],
+        "overlap_share": [1.0, 0.0, 0.0, 0.04, 0.0],
+        "outside_share": [0.0, 0.0, 0.6, 0.0, 0.0],
+    })
+    (tmp_path / "quality").mkdir()
+    (tmp_path / "quality-municipalities").mkdir()
+    f_q = tmp_path / "quality" / "state=PE.parquet"
+    f_qm = tmp_path / "quality-municipalities" / "state=PE.parquet"
+    con.execute(f"COPY (SELECT * FROM quality ORDER BY municipality_code, property_code) TO '{f_q}' (FORMAT parquet)")
+    con.execute(f"""
+        COPY (SELECT 'PE' AS state, q.municipality_code, count(*) AS properties,
+                count(*) FILTER (overlap_share > 0.01) AS overlapping,
+                count(*) FILTER (overlap_share > 0.5) AS overlapping_half,
+                sum(p.area_ha * overlap_share) AS overlap_ha,
+                count(*) FILTER (outside_share > 0.5) AS outside_half,
+                sum(p.area_ha * outside_share) AS outside_ha
+              FROM quality q JOIN props p USING (property_code) GROUP BY ALL) TO '{f_qm}' (FORMAT parquet)""")
     (tmp_path / "catalog.json").write_text(json.dumps({
         "version": "2026-01-01",
         "source": {"name": "teste"},
@@ -78,6 +99,8 @@ def release(tmp_path):
             {"path": "properties/state=PE/part-0.parquet", "sha256": _sha(f_props)},
             {"path": "municipalities/state=PE.parquet", "sha256": _sha(f_mun)},
             {"path": "summary/state=PE.parquet", "sha256": _sha(f_sum)},
+            {"path": "quality/state=PE.parquet", "sha256": _sha(f_q)},
+            {"path": "quality-municipalities/state=PE.parquet", "sha256": _sha(f_qm)},
         ],
     }))
     (tmp_path / "dictionary.json").write_text(json.dumps(

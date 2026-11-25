@@ -163,3 +163,21 @@ def test_check_classifies_a_batch_of_codes(release):
                                  "property_type", "size_class", "area_ha", "fiscal_modules", "state",
                                  "municipality", "created_at"]
     assert len(carbr.car_check([])) == 0
+
+
+def test_quality_indicators_per_property_and_per_municipality(release):
+    q = carbr.car_quality("PE")
+    assert list(q.columns) == ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share"]
+    assert len(q) == 5
+    town = carbr.car_quality("PE", municipality="petrolina")
+    assert len(town) == 4 and town["overlap_count"].sum() == 2
+    assert town.loc[town["overlap_share"] == 1.0, "property_code"].iloc[0] == f"PE-2611101-{1:032X}"
+    assert len(carbr.car_quality("PE", municipality=2611606)) == 1
+
+    s = carbr.car_quality_summary("PE")
+    assert list(s["municipality"]) == ["Petrolina", "Recife"]
+    assert list(s["properties"]) == [4, 1]
+    assert list(s["overlapping"]) == [2, 0] and list(s["overlapping_half"]) == [1, 0]
+    assert s["overlap_ha"].iloc[0] == pytest.approx(250.0)
+    assert list(s["outside_half"]) == [1, 0]
+    assert len(carbr.car_quality_summary()) == 2
