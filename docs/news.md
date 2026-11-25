@@ -1,6 +1,6 @@
 # Novidades
 
-## Em desenvolvimento
+## 0.3.0
 
 - Servidor MCP (`carbr-mcp`, extra `mcp`): oito ferramentas de consulta ao CAR para assistentes.
 
