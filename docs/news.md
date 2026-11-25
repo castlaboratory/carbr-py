@@ -1,5 +1,9 @@
 # Novidades
 
+## 0.1.1
+
+- Metadados de citação (`CITATION.cff`), para o arquivamento no Zenodo. Sem mudança no código.
+
 ## 0.1.0
 
 - Primeira versão no PyPI: `car_catalog()`, `car_dictionary()`, `car_summary()`,
