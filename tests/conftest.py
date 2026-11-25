@@ -1,0 +1,80 @@
+"""A tiny publication on disk: six square properties in two municipalities."""
+
+import hashlib
+import json
+
+import duckdb
+import pandas as pd
+import pytest
+from shapely.geometry import MultiPolygon, box
+
+import carbr
+
+
+def _sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@pytest.fixture
+def release(tmp_path):
+    x = [-40.50, -40.48, -40.46, -35.00, -34.98, -40.50]
+    y = [-9.40, -9.40, -9.40, -8.00, -8.00, -9.40]
+    # The sixth property overlaps the first: a bigger square on the same corner.
+    side = [0.01] * 5 + [0.05]
+    mun = ["2611101"] * 3 + ["2611606"] * 2 + ["2611101"]
+    props = pd.DataFrame({  # noqa: F841
+        "property_code": [f"PE-{m}-{i:032X}" for i, m in enumerate(mun, 1)],
+        "status_code": ["AT", "AT", "PE", "AT", "CA", "AT"],
+        "status": ["active", "active", "pending", "active", "cancelled", "active"],
+        "condition": "Aguardando análise",
+        "property_type_code": "IRU",
+        "property_type": "rural_property",
+        "created_at": pd.Timestamp("2020-01-01", tz="UTC"),
+        "area_ha": [10.0, 20.0, 30.0, 40.0, 50.0, 6000.0],
+        "fiscal_modules": [0.2, 0.4, 0.6, 5.0, 6.0, 100.0],
+        "size_class": ["small"] * 3 + ["medium"] * 2 + ["large"],
+        "state": "PE",
+        "municipality": ["Petrolina"] * 3 + ["Recife"] * 2 + ["Petrolina"],
+        "municipality_code": [int(m) for m in mun],
+        "registration_state": "PE",
+        "lon": [a + s / 2 for a, s in zip(x, side)],
+        "lat": [b + s / 2 for b, s in zip(y, side)],
+        "geometry_valid": True,
+        "xmin": x,
+        "ymin": y,
+        "xmax": [a + s for a, s in zip(x, side)],
+        "ymax": [b + s for b, s in zip(y, side)],
+        "geometry": [MultiPolygon([box(a, b, a + s, b + s)]).wkb for a, b, s in zip(x, y, side)],
+    })
+    (tmp_path / "properties" / "state=PE").mkdir(parents=True)
+    (tmp_path / "municipalities").mkdir()
+    f_props = tmp_path / "properties" / "state=PE" / "part-0.parquet"
+    f_mun = tmp_path / "municipalities" / "state=PE.parquet"
+    con = duckdb.connect()
+    con.execute(f"COPY (SELECT * FROM props ORDER BY municipality_code) TO '{f_props}' (FORMAT parquet)")
+    con.execute(f"""
+        COPY (SELECT state, municipality_code, municipality, count(*) AS properties,
+                count(*) FILTER (size_class = 'small') AS small_properties, sum(area_ha) AS area_ha,
+                count(*) FILTER (status = 'active') AS active,
+                count(*) FILTER (status = 'pending') AS pending,
+                count(*) FILTER (status = 'suspended') AS suspended,
+                count(*) FILTER (status = 'cancelled') AS cancelled,
+                count(*) FILTER (NOT geometry_valid) AS invalid_geometries,
+                min(xmin) AS xmin, min(ymin) AS ymin, max(xmax) AS xmax, max(ymax) AS ymax
+              FROM props GROUP BY ALL) TO '{f_mun}' (FORMAT parquet)""")
+    (tmp_path / "catalog.json").write_text(json.dumps({
+        "version": "2026-01-01",
+        "source": {"name": "teste"},
+        "states": {"PE": {"properties": 6, "municipalities": 2, "quality": {
+            "invalid_geometries": 0, "null_geometries": 0, "registered_in_other_state": 0}}},
+        "files": [
+            {"path": "properties/state=PE/part-0.parquet", "sha256": _sha(f_props)},
+            {"path": "municipalities/state=PE.parquet", "sha256": _sha(f_mun)},
+        ],
+    }))
+    (tmp_path / "dictionary.json").write_text(json.dumps(
+        [{"column": "property_code", "sicar_name": "cod_imovel", "description": "Código"}]))
+    carbr.set_verbose(False)
+    carbr.set_base_url(tmp_path)
+    yield tmp_path
+    carbr.set_base_url(None)

@@ -1,0 +1,12 @@
+/* Same green as the R package site. */
+:root {
+  --md-primary-fg-color: #1f5f3a;
+  --md-primary-fg-color--light: #3d8a5c;
+  --md-primary-fg-color--dark: #123a23;
+  --md-accent-fg-color: #2e8b57;
+}
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #1f5f3a;
+  --md-accent-fg-color: #8fbf9f;
+}
+.md-typeset table:not([class]) { font-size: .72rem; }

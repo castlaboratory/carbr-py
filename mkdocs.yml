@@ -1,0 +1,61 @@
+site_name: carbr
+site_description: O Cadastro Ambiental Rural (CAR) no Python, sem baixar a base inteira
+site_url: https://strategicprojects.github.io/carbr-py/
+repo_url: https://github.com/StrategicProjects/carbr-py
+repo_name: StrategicProjects/carbr-py
+copyright: Código MIT · Dados do Sicar, Serviço Florestal Brasileiro
+
+theme:
+  name: material
+  language: pt-BR
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Modo escuro
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+  features:
+    - navigation.sections
+    - content.code.copy
+    - search.highlight
+
+extra_css:
+  - assets/extra.css
+
+nav:
+  - Início: index.md
+  - Primeiros passos: primeiros-passos.md
+  - Referência das funções: api.md
+  - Novidades: news.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            show_root_heading: true
+            show_source: false
+            members_order: source
+
+exclude_docs: |
+  precompile.py

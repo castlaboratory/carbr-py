@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 278" width="240" height="278" role="img" aria-label="carbr">
+  <title>carbr</title>
+  <defs>
+    <clipPath id="hex"><polygon points="120,6 234,72 234,206 120,272 6,206 6,72"/></clipPath>
+  </defs>
+  <polygon points="120,6 234,72 234,206 120,272 6,206 6,72" fill="#1f5f3a"/>
+  <g clip-path="url(#hex)" stroke="#f4f8f1" stroke-width="3" stroke-linejoin="round">
+    <polygon points="36,78 94,54 110,102 48,118" fill="#3d8a5c"/>
+    <polygon points="94,54 160,46 166,96 110,102" fill="#2e7449"/>
+    <polygon points="160,46 208,80 202,122 166,96" fill="#57a374"/>
+    <polygon points="48,118 110,102 122,152 42,162" fill="#2e7449"/>
+    <polygon points="110,102 166,96 202,122 188,162 122,152" fill="#d9ecb4"/>
+  </g>
+  <circle cx="156" cy="128" r="9" fill="#1f5f3a"/>
+  <circle cx="156" cy="128" r="3.5" fill="#f4f8f1"/>
+  <text x="120" y="226" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="46" font-weight="700" letter-spacing="1" fill="#f4f8f1">carbr</text>
+  <polygon points="120,6 234,72 234,206 120,272 6,206 6,72" fill="none" stroke="#123a23" stroke-width="8" stroke-linejoin="round"/>
+</svg>
