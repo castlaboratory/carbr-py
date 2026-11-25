@@ -9,10 +9,31 @@ fonte e a data da publicação, em vez de estimar.
 - "Verifique estes códigos de imóvel e diga quais têm pendência."
 - "Em que etapa da análise estão os imóveis do Pará?"
 
-O servidor roda na máquina de quem usa, lê a mesma publicação dos pacotes e não envia nada a
-terceiros além das leituras dos arquivos públicos.
+Há duas formas de usar: o servidor público, só com o endereço, ou o servidor local, que vem no
+pacote Python. Os dois leem a mesma publicação dos pacotes.
 
-## Instalação
+## Sem instalar nada
+
+Há um servidor público, que qualquer assistente compatível com servidores MCP remotos pode usar só com
+o endereço:
+
+```
+https://mcp.castlab.org/mcp
+```
+
+No Claude Code:
+
+```bash
+claude mcp add --transport http car https://mcp.castlab.org/mcp
+```
+
+Ele oferece as mesmas ferramentas descritas abaixo. O código está em
+[carbr-mcp](https://github.com/castlaboratory/carbr-mcp).
+
+## Na sua máquina
+
+O pacote Python traz o mesmo servidor para rodar localmente, sem depender do endereço público.
+
 
 ```bash
 pip install "carbr[mcp]"
