@@ -15,6 +15,8 @@ servidores do Sicar.
 
 **Documentação:** <https://castlaboratory.github.io/carbr-py/>
 
+**Consulta no navegador, sem instalar nada:** <https://car.castlab.org/index.html>
+
 ## Instalação
 
 ```bash

@@ -12,6 +12,8 @@ imóvel — transfere só os trechos do arquivo de que precisa, e não passa pel
 servidores do Sicar.
 
 
+**Consulta no navegador, sem instalar nada:** <https://car.castlab.org/index.html>
+
 ## Instalação
 
 ```bash
