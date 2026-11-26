@@ -88,6 +88,11 @@ def release(tmp_path):
         "embargo_share": [0.0, 0.0, 0.0, 0.0, 0.4],
         # O 3º imóvel (o do parque) também tem um quarto da área em floresta pública não destinada.
         "public_forest_share": [0.0, 0.0, 0.25, 0.0, 0.0],
+        # Sigef: o 1º imóvel coincide com uma parcela certificada; o da APA cai em território quilombola.
+        "sigef_count": [1, 0, 0, 1, 0],
+        "sigef_share": [0.98, 0.0, 0.0, 0.5, 0.0],
+        "quilombola_share": [0.0, 0.0, 0.0, 0.5, 0.0],
+        "settlement_share": [0.0, 0.0, 0.0, 0.0, 0.0],
     })
     (tmp_path / "quality").mkdir()
     (tmp_path / "quality-municipalities").mkdir()
@@ -110,7 +115,11 @@ def release(tmp_path):
                 count(*) FILTER (embargo_count > 0) AS embargoed,
                 sum(p.area_ha * embargo_share) AS embargo_ha,
                 count(*) FILTER (public_forest_share > 0.01) AS public_forest,
-                sum(p.area_ha * public_forest_share) AS public_forest_ha
+                sum(p.area_ha * public_forest_share) AS public_forest_ha,
+                count(*) FILTER (sigef_share >= 0.5) AS certified,
+                sum(p.area_ha * sigef_share) AS sigef_ha,
+                count(*) FILTER (quilombola_share > 0.01) AS quilombola,
+                count(*) FILTER (settlement_share > 0.01) AS settlement
               FROM quality q JOIN props p USING (property_code) GROUP BY ALL) TO '{f_qm}' (FORMAT parquet)""")
     (tmp_path / "typology").mkdir()
     f_typ = tmp_path / "typology" / "municipalities.parquet"

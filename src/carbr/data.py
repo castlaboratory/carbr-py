@@ -403,7 +403,7 @@ def _check_quality(uf: str, part: pd.DataFrame) -> pd.DataFrame:
     """Sobreposição com áreas protegidas dos imóveis de `part` (vazio se a publicação não traz)."""
     columns = ["property_code", "indigenous_share", "strict_protection_share", "sustainable_use_share",
                "indigenous_land", "conservation_unit", "conservation_category", "embargo_count", "embargo_share",
-               "public_forest_share"]
+               "public_forest_share", "quilombola_share", "sigef_share"]
     if not len(part):
         return pd.DataFrame(columns=columns)
     with warnings.catch_warnings():
@@ -413,7 +413,7 @@ def _check_quality(uf: str, part: pd.DataFrame) -> pd.DataFrame:
 
 
 _PROTECTED = ["indigenous_share", "strict_protection_share", "sustainable_use_share", "protected_area",
-              "embargo_count", "embargo_share", "public_forest_share"]
+              "embargo_count", "embargo_share", "public_forest_share", "quilombola_share", "sigef_share"]
 _SHARE_MIN = 0.01       # abaixo de 1% da área, a sobreposição é ruído de limite
 
 
@@ -450,7 +450,11 @@ def _protected(row, check: str, note: str) -> tuple[str, str, str | None]:
     forest = share("public_forest_share")
     if forest >= _SHARE_MIN:
         extra.append(f"Sobrepõe floresta pública não destinada (tipo B) em {_percent(forest)}.")
-    alert = ti >= _SHARE_MIN or strict >= _SHARE_MIN or embargoes > 0 or forest >= _SHARE_MIN
+    quilombola = share("quilombola_share")
+    if quilombola >= _SHARE_MIN:
+        extra.append(f"Sobrepõe território quilombola georreferenciado no Sigef em {_percent(quilombola)}.")
+    alert = (ti >= _SHARE_MIN or strict >= _SHARE_MIN or embargoes > 0 or forest >= _SHARE_MIN
+             or quilombola >= _SHARE_MIN)
     if alert and check == "ok":
         check, note = "attention", ""
     area = "; ".join(str(n) for n in names if isinstance(n, str)) or None
@@ -471,8 +475,9 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
     - ``"ok"``: cadastro ativo, sem notificação pendente;
     - ``"attention"``: cadastro pendente, analisado com notificação ainda
       sem resposta do declarante, com mais de 1% da área sobre terra
-      indígena, unidade de conservação de proteção integral ou floresta
-      pública não destinada, ou com embargo ambiental ativo do Ibama;
+      indígena, unidade de conservação de proteção integral, floresta
+      pública não destinada ou território quilombola georreferenciado no
+      Sigef, ou com embargo ambiental ativo do Ibama;
     - ``"blocked"``: cadastro cancelado ou suspenso;
     - ``"not_found"``: código que não está na publicação (pode ter sido
       cadastrado depois da última atualização);
@@ -486,10 +491,12 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
     não cancelados e sem desembargo), localizados pelo polígono ou pelo
     ponto do termo; não entram embargos estaduais nem do ICMBio. A
     As florestas públicas não destinadas ("tipo B") são as do Cadastro
-    Nacional de Florestas Públicas. A verificação não cobre os demais
-    impedimentos do crédito rural (territórios quilombolas, supressão de
-    vegetação, trabalho análogo à escravidão) e não substitui a consulta
-    oficial ao Sicar.
+    Nacional de Florestas Públicas. Os territórios quilombolas são só os
+    já georreferenciados no Sigef, do Incra: a camada completa não está
+    publicada hoje, então a ausência de alerta não garante que o imóvel
+    esteja fora de um território quilombola. A verificação não cobre a
+    supressão de vegetação nem o trabalho análogo à escravidão, e não
+    substitui a consulta oficial ao Sicar.
 
     Parameters
     ----------
@@ -508,7 +515,8 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
         ``indigenous_share``, ``strict_protection_share``,
         ``sustainable_use_share`` (parcelas da área, de 0 a 1),
         ``protected_area`` (os nomes das áreas sobrepostas),
-        ``embargo_count``, ``embargo_share`` e ``public_forest_share``.
+        ``embargo_count``, ``embargo_share``, ``public_forest_share``,
+        ``quilombola_share`` e ``sigef_share``.
     """
     codes = list(dict.fromkeys(str(c).strip().upper() for c in _as_list(code) if str(c).strip()))
     columns = ["property_code", "status", "condition", "property_type", "size_class",
@@ -562,12 +570,14 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
 _QUALITY = ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share",
             "indigenous_share", "strict_protection_share", "sustainable_use_share",
             "indigenous_land", "conservation_unit", "conservation_category",
-            "embargo_count", "embargo_share", "public_forest_share"]
+            "embargo_count", "embargo_share", "public_forest_share",
+            "sigef_count", "sigef_share", "quilombola_share", "settlement_share"]
 _QUALITY_SUMMARY = ["state", "municipality_code", "municipality", "properties", "overlapping",
                     "overlapping_half", "overlap_ha", "outside_half", "outside_ha",
                     "indigenous", "indigenous_ha", "strict_protection", "strict_protection_ha",
                     "sustainable_use", "sustainable_use_ha", "embargoed", "embargo_ha",
-                    "public_forest", "public_forest_ha"]
+                    "public_forest", "public_forest_ha",
+                    "certified", "sigef_ha", "quilombola", "settlement"]
 
 
 def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
@@ -590,7 +600,14 @@ def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
       alcançam o imóvel e que parcela da área está embargada (só os termos que têm o
       polígono da área; os demais contam pelo ponto de referência);
     - ``public_forest_share``: que parcela fica dentro de florestas públicas não destinadas
-      ("tipo B"), pelo Cadastro Nacional de Florestas Públicas, do Serviço Florestal.
+      ("tipo B"), pelo Cadastro Nacional de Florestas Públicas, do Serviço Florestal;
+    - ``sigef_count`` e ``sigef_share``: quantas parcelas georreferenciadas no Sigef (Incra)
+      o imóvel alcança e que parcela da área elas cobrem. Perto de 1 quer dizer que o
+      perímetro declarado no CAR coincide com um georreferenciamento aprovado pelo Incra;
+    - ``quilombola_share`` e ``settlement_share``: que parcela cai em parcelas do Sigef cuja
+      natureza é território quilombola ou assentamento. **A cobertura é parcial**: só os
+      territórios já georreferenciados no Sigef; a camada completa de territórios
+      quilombolas não está publicada pelo Incra hoje.
 
     Sobreposição entre imóveis não é sinônimo de disputa: inclui imóvel declarado duas
     vezes e lote dentro de assentamento; a comparação é só entre imóveis do mesmo
@@ -646,7 +663,9 @@ def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFram
     têm mais de 1% da área dentro delas e quantos hectares (``*_ha``); e quantos imóveis
     têm embargo ativo do Ibama (``embargoed``) e os hectares embargados (``embargo_ha``); e
     quantos têm mais de 1% da área em floresta pública tipo B (``public_forest``,
-    ``public_forest_ha``).
+    ``public_forest_ha``). Do Sigef: ``certified`` (imóveis com mais da metade da área em
+    parcelas georreferenciadas), ``sigef_ha``, ``quilombola`` e ``settlement`` (imóveis com
+    mais de 1% em território quilombola ou em assentamento do Sigef).
     Arquivos pequenos, guardados em cache.
 
     Parameters

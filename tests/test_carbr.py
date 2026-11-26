@@ -163,7 +163,8 @@ def test_check_classifies_a_batch_of_codes(release):
                                  "property_type", "size_class", "area_ha", "fiscal_modules", "state",
                                  "municipality", "created_at", "indigenous_share",
                                  "strict_protection_share", "sustainable_use_share", "protected_area",
-                                 "embargo_count", "embargo_share", "public_forest_share"]
+                                 "embargo_count", "embargo_share", "public_forest_share",
+                                 "quilombola_share", "sigef_share"]
     assert len(carbr.car_check([])) == 0
 
 
@@ -179,8 +180,10 @@ def test_check_flags_indigenous_lands_and_strict_protection_units(release):
     assert park["check"] == "attention" and park["note"].startswith("Cadastro pendente.")
     assert "proteção integral (Parque Teste) em 30% da área" in park["note"]
     assert park["note"].endswith("Sobrepõe floresta pública não destinada (tipo B) em 25% da área.")
-    # Sustainable use is reported, but does not change the result.
-    assert apa["check"] == "ok" and apa["sustainable_use_share"] == 1.0
+    # Sustainable use is reported and would not change the result; the quilombola territory does.
+    assert apa["check"] == "attention" and apa["sustainable_use_share"] == 1.0
+    assert apa["note"].endswith("Sobrepõe território quilombola georreferenciado no Sigef em 50% da área.")
+    assert clean["sigef_share"] == 0.98
     assert "uso sustentável (Área de Proteção Ambiental: APA Teste), em toda a área" in apa["note"]
     assert apa["protected_area"] == "APA Teste"
     # An Ibama embargo also turns an otherwise clean property into "attention".
@@ -195,7 +198,8 @@ def test_quality_indicators_per_property_and_per_municipality(release):
                                "outside_share", "indigenous_share", "strict_protection_share",
                                "sustainable_use_share", "indigenous_land", "conservation_unit",
                                "conservation_category", "embargo_count", "embargo_share",
-                               "public_forest_share"]
+                               "public_forest_share", "sigef_count", "sigef_share", "quilombola_share",
+                               "settlement_share"]
     assert len(q) == 5
     town = carbr.car_quality("PE", municipality="petrolina")
     assert len(town) == 4 and town["overlap_count"].sum() == 2
@@ -211,6 +215,7 @@ def test_quality_indicators_per_property_and_per_municipality(release):
     assert list(s["indigenous"]) == [1, 0] and s["indigenous_ha"].iloc[0] == pytest.approx(16.0)
     assert list(s["strict_protection"]) == [1, 0] and list(s["sustainable_use"]) == [1, 0]
     assert list(s["embargoed"]) == [0, 1] and list(s["public_forest"]) == [1, 0]
+    assert list(s["certified"]) == [2, 0] and list(s["quilombola"]) == [1, 0]
     assert len(carbr.car_quality_summary()) == 2
 
 

@@ -65,6 +65,9 @@ Ao responder com estes dados:
   imóvel e `embargo_share`, a parcela da área embargada. Só Ibama; não há embargos estaduais.
 - Florestas públicas: `public_forest_share` é a parcela do imóvel dentro de florestas públicas não
   destinadas ("tipo B"), pelo Cadastro Nacional de Florestas Públicas, do Serviço Florestal.
+- Sigef: `sigef_share` é a parcela do imóvel coberta por parcelas georreferenciadas no Sigef (Incra);
+  `quilombola_share` e `settlement_share`, a parcela em território quilombola ou assentamento do
+  Sigef. A cobertura de territórios quilombolas é parcial: só os já georreferenciados.
 - Tipologia (`tipologia`, em `municipio`): o grupo do município entre cinco, pelo perfil do
   cadastro (porte dos imóveis, etapa da análise e sobreposição); `typology_label` é o nome do
   grupo e os indicadores são parcelas de 0 a 1 (`coverage` é a área declarada sobre a área do
@@ -216,7 +219,7 @@ def _town_quality(uf: str, code: int) -> dict[str, Any] | None:
 
 _AREAS = ["indigenous_share", "strict_protection_share", "sustainable_use_share",
           "indigenous_land", "conservation_unit", "conservation_category", "embargo_count", "embargo_share",
-          "public_forest_share"]
+          "public_forest_share", "sigef_count", "sigef_share", "quilombola_share", "settlement_share"]
 
 
 def _property_quality(df: pd.DataFrame) -> pd.DataFrame:
@@ -253,7 +256,8 @@ def verificar_imoveis(codigos: list[str]) -> dict[str, Any]:
     Para cada código: o que consta na camada pública e um resultado (`check`): ok
     (ativo, sem notificação pendente), attention (pendente, notificado sem resposta, ou com
     mais de 1% da área sobre terra indígena ou unidade de conservação de proteção integral, ou
-    em floresta pública não destinada, ou com embargo ambiental ativo do Ibama),
+    em floresta pública não destinada, em território quilombola do Sigef, ou com embargo ativo
+    do Ibama),
     blocked (cancelado ou suspenso), not_found, invalid. `note` traz o motivo e
     `protected_area`, os nomes das áreas sobrepostas. A classificação é do carbr, não uma
     regra oficial.
