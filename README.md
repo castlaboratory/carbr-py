@@ -13,6 +13,12 @@ consulta — por UF, município, situação, porte, retângulo, ponto ou código
 imóvel — transfere só os trechos do arquivo de que precisa, e não passa pelos
 servidores do Sicar.
 
+Além do cadastro, a publicação traz indicadores por imóvel (sobreposição entre cadastros, terras
+indígenas e unidades de conservação), uma tipologia dos municípios e resumos do país já calculados.
+Para conferir um imóvel de cada vez na tela, há o portal oficial
+[Consulta Pública](https://consulta.car.gov.br), do Sicar; o `carbr` é para quem precisa dos dados
+dentro de um programa.
+
 **Documentação:** <https://castlaboratory.github.io/carbr-py/>
 
 **Consulta no navegador, sem instalar nada:** <https://car.castlab.org/index.html>
