@@ -1,0 +1,1263 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="O Cadastro Ambiental Rural (CAR) no Python, sem baixar a base inteira">
+      
+      
+      
+        <link rel="canonical" href="https://castlaboratory.github.io/carbr-py/inconsistencias/">
+      
+      
+        <link rel="prev" href="../primeiros-passos/">
+      
+      
+        <link rel="next" href="../fila-da-analise/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Inconsistências do cadastro - carbr</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#inconsistencias-do-cadastro" class="md-skip">
+          Pular para conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href=".." title="carbr" class="md-header__button md-logo" aria-label="carbr" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            carbr
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Inconsistências do cadastro
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Modo escuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Modo escuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando busca
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/castlaboratory/carbr-py" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    castlaboratory/carbr-py
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="carbr" class="md-nav__button md-logo" aria-label="carbr" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    carbr
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/castlaboratory/carbr-py" title="Ir para repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    castlaboratory/carbr-py
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../primeiros-passos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Primeiros passos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inconsistências do cadastro
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inconsistências do cadastro
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#o-que-a-carga-ja-registra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que a carga já registra
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-pais-inteiro-sobreposicao-e-imoveis-fora-do-municipio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O país inteiro: sobreposição e imóveis fora do município
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terras-indigenas-e-unidades-de-conservacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terras indígenas e unidades de conservação
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-perimetro-confere-com-o-incra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O perímetro confere com o Incra?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-codigo-diz-um-municipio-o-cadastro-diz-outro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O código diz um município, o cadastro diz outro
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mais-area-declarada-do-que-territorio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mais área declarada do que território
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dentro-de-um-municipio-petrolina" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dentro de um município: Petrolina
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dentro de um município: Petrolina">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#imoveis-fora-do-municipio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imóveis fora do município
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sobreposicoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sobreposições
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pequeno-nem-sempre-e-pequeno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Pequeno" nem sempre é pequeno
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-que-fazer-com-isso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que fazer com isso
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fila-da-analise/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Onde a análise está parada
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../triagem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Triagem para crédito
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../assistentes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Assistentes (MCP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referência das funções
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../news/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Novidades
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#o-que-a-carga-ja-registra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que a carga já registra
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-pais-inteiro-sobreposicao-e-imoveis-fora-do-municipio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O país inteiro: sobreposição e imóveis fora do município
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#terras-indigenas-e-unidades-de-conservacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Terras indígenas e unidades de conservação
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-perimetro-confere-com-o-incra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O perímetro confere com o Incra?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-codigo-diz-um-municipio-o-cadastro-diz-outro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O código diz um município, o cadastro diz outro
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mais-area-declarada-do-que-territorio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mais área declarada do que território
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dentro-de-um-municipio-petrolina" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dentro de um município: Petrolina
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dentro de um município: Petrolina">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#imoveis-fora-do-municipio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imóveis fora do município
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sobreposicoes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sobreposições
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pequeno-nem-sempre-e-pequeno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Pequeno" nem sempre é pequeno
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#o-que-fazer-com-isso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        O que fazer com isso
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="inconsistencias-do-cadastro">Inconsistências do cadastro<a class="headerlink" href="#inconsistencias-do-cadastro" title="Permanent link">&para;</a></h1>
+<p>O CAR é <strong>autodeclarado</strong>: quem desenha o perímetro e informa os dados é o próprio
+declarante, e a conferência vem depois, na análise. Enquanto ela não chega, o cadastro
+guarda sobreposições, imóveis fora do município informado e áreas que não fecham com o
+território. Este guia mostra como encontrar essas inconsistências com o <code>carbr</code>, do
+país até um município.</p>
+<p>Nada aqui é juízo sobre um imóvel em particular: são sinais para orientar a análise e
+para quem usa os dados saber o que tem em mãos.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">carbr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ibge_mesh</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"https://servicodados.ibge.gov.br/api/v3/malhas/"</span> <span class="o">+</span> <span class="n">path</span>
+           <span class="o">+</span> <span class="s2">"formato=application/vnd.geo%2Bjson&amp;qualidade=intermediaria"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="mi">4674</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="o-que-a-carga-ja-registra">O que a carga já registra<a class="headerlink" href="#o-que-a-carga-ja-registra" title="Permanent link">&para;</a></h2>
+<p>Ao republicar os dados, o <code>carbr</code> anota no catálogo o que encontrou em cada UF:
+geometrias inválidas (com autointerseção, por exemplo) e imóveis cujo código começa
+com a sigla de outra UF. As inválidas ficam na publicação, marcadas na coluna
+<code>geometry_valid</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">cat</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_catalog</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cat</span><span class="p">[[</span><span class="s2">"invalid_geometries"</span><span class="p">,</span> <span class="s2">"registered_in_other_state"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+<span class="n">cat</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"invalid_geometries"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"state"</span><span class="p">,</span> <span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"invalid_geometries"</span><span class="p">,</span> <span class="s2">"registered_in_other_state"</span><span class="p">]</span>
+<span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>invalid_geometries           2748
+registered_in_other_state      29
+dtype: int64
+   state  properties  invalid_geometries  registered_in_other_state
+10    MG     1185013                 597                          0
+25    SP      474172                 498                          0
+8     GO      245524                 210                          4
+17    PR      559480                 185                          0
+11    MS       90552                 156                          0
+23    SC      437300                 134                          0
+</code></pre></div>
+<h2 id="o-pais-inteiro-sobreposicao-e-imoveis-fora-do-municipio">O país inteiro: sobreposição e imóveis fora do município<a class="headerlink" href="#o-pais-inteiro-sobreposicao-e-imoveis-fora-do-municipio" title="Permanent link">&para;</a></h2>
+<p>Dois sinais são calculados na publicação para cada imóvel não cancelado, e ficam
+prontos para consulta: a parcela da área sobreposta a outros imóveis do estado e a
+parcela que fica fora do município declarado. <code>car_quality_summary()</code> traz o resumo
+por município; somando por UF:</p>
+<div class="highlight"><pre><span></span><code><span class="n">quality</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_quality_summary</span><span class="p">()</span>
+<span class="n">by_state</span> <span class="o">=</span> <span class="n">quality</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)[[</span><span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"overlapping_half"</span><span class="p">,</span> <span class="s2">"outside_half"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">by_state</span><span class="p">[</span><span class="s2">"share_overlapping"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">by_state</span><span class="p">[</span><span class="s2">"overlapping_half"</span><span class="p">]</span> <span class="o">/</span> <span class="n">by_state</span><span class="p">[</span><span class="s2">"properties"</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">by_state</span><span class="p">[</span><span class="s2">"share_outside"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">by_state</span><span class="p">[</span><span class="s2">"outside_half"</span><span class="p">]</span> <span class="o">/</span> <span class="n">by_state</span><span class="p">[</span><span class="s2">"properties"</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">total</span> <span class="o">=</span> <span class="n">by_state</span><span class="p">[</span><span class="s2">"properties"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">by_state</span><span class="p">[</span><span class="s1">'overlapping_half'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">% dos imóveis com mais da metade da área sobreposta;"</span><span class="p">,</span>
+      <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">by_state</span><span class="p">[</span><span class="s1">'outside_half'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2"> com mais da metade fora do município"</span><span class="p">)</span>
+
+<span class="n">by_state</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"share_overlapping"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>25% dos imóveis com mais da metade da área sobreposta; 117303 com mais da metade fora do município
+       properties  overlapping_half  outside_half  share_overlapping  share_outside
+state                                                                              
+DF          20826             15830            10               76.0           0.05
+AC          57680             36265           294               62.9           0.51
+RR          27145             16807           215               61.9           0.79
+AP          16906              9983           192               59.1           1.14
+MA         414258            238954          8819               57.7           2.13
+MT         206064             97781          3397               47.5           1.65
+AM          95521             44325           780               46.4           0.82
+PA         345391            157621          2513               45.6           0.73
+RO         188779             75054          1790               39.8           0.95
+AL         141643             55653          3422               39.3           2.42
+</code></pre></div>
+<p>A diferença entre os estados é grande:</p>
+<div class="highlight"><pre><span></span><code><span class="n">UFS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"11"</span><span class="p">:</span> <span class="s2">"RO"</span><span class="p">,</span> <span class="s2">"12"</span><span class="p">:</span> <span class="s2">"AC"</span><span class="p">,</span> <span class="s2">"13"</span><span class="p">:</span> <span class="s2">"AM"</span><span class="p">,</span> <span class="s2">"14"</span><span class="p">:</span> <span class="s2">"RR"</span><span class="p">,</span> <span class="s2">"15"</span><span class="p">:</span> <span class="s2">"PA"</span><span class="p">,</span> <span class="s2">"16"</span><span class="p">:</span> <span class="s2">"AP"</span><span class="p">,</span> <span class="s2">"17"</span><span class="p">:</span> <span class="s2">"TO"</span><span class="p">,</span> <span class="s2">"21"</span><span class="p">:</span> <span class="s2">"MA"</span><span class="p">,</span>
+       <span class="s2">"22"</span><span class="p">:</span> <span class="s2">"PI"</span><span class="p">,</span> <span class="s2">"23"</span><span class="p">:</span> <span class="s2">"CE"</span><span class="p">,</span> <span class="s2">"24"</span><span class="p">:</span> <span class="s2">"RN"</span><span class="p">,</span> <span class="s2">"25"</span><span class="p">:</span> <span class="s2">"PB"</span><span class="p">,</span> <span class="s2">"26"</span><span class="p">:</span> <span class="s2">"PE"</span><span class="p">,</span> <span class="s2">"27"</span><span class="p">:</span> <span class="s2">"AL"</span><span class="p">,</span> <span class="s2">"28"</span><span class="p">:</span> <span class="s2">"SE"</span><span class="p">,</span> <span class="s2">"29"</span><span class="p">:</span> <span class="s2">"BA"</span><span class="p">,</span>
+       <span class="s2">"31"</span><span class="p">:</span> <span class="s2">"MG"</span><span class="p">,</span> <span class="s2">"32"</span><span class="p">:</span> <span class="s2">"ES"</span><span class="p">,</span> <span class="s2">"33"</span><span class="p">:</span> <span class="s2">"RJ"</span><span class="p">,</span> <span class="s2">"35"</span><span class="p">:</span> <span class="s2">"SP"</span><span class="p">,</span> <span class="s2">"41"</span><span class="p">:</span> <span class="s2">"PR"</span><span class="p">,</span> <span class="s2">"42"</span><span class="p">:</span> <span class="s2">"SC"</span><span class="p">,</span> <span class="s2">"43"</span><span class="p">:</span> <span class="s2">"RS"</span><span class="p">,</span> <span class="s2">"50"</span><span class="p">:</span> <span class="s2">"MS"</span><span class="p">,</span>
+       <span class="s2">"51"</span><span class="p">:</span> <span class="s2">"MT"</span><span class="p">,</span> <span class="s2">"52"</span><span class="p">:</span> <span class="s2">"GO"</span><span class="p">,</span> <span class="s2">"53"</span><span class="p">:</span> <span class="s2">"DF"</span><span class="p">}</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">ibge_mesh</span><span class="p">(</span><span class="s2">"paises/BR?intrarregiao=UF&amp;"</span><span class="p">)</span>
+<span class="n">states</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="s2">"codarea"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">UFS</span><span class="p">)</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">states</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">by_state</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(),</span> <span class="n">on</span><span class="o">=</span><span class="s2">"state"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">states</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">"share_overlapping"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"OrRd"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"white"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                 <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">6.4</span><span class="p">),</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">legend_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">"shrink"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Imóveis com mais da metade da área sobreposta (%)"</span><span class="p">})</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Sobreposição entre imóveis do CAR, por UF"</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">(</span><span class="s2">"brasil"</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="brasil" src="../assets/brasil.png" /></p>
+<p>Sobreposição não é sinônimo de disputa: entra na conta o mesmo imóvel declarado duas
+vezes e o lote que fica dentro de um assentamento. É um sinal de onde a análise tem
+mais a conferir. Os municípios com mais casos:</p>
+<div class="highlight"><pre><span></span><code><span class="n">quality</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"overlapping_half"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"state"</span><span class="p">,</span> <span class="s2">"municipality"</span><span class="p">,</span> <span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"overlapping_half"</span><span class="p">,</span> <span class="s2">"outside_half"</span><span class="p">]</span>
+<span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>     state        municipality  properties  overlapping_half  outside_half
+5562    DF            Brasília       20826             15830            10
+16      RO         Porto Velho       23819             14018            53
+2639    MG            Januária       12397              9113            90
+500     MA              Caxias       10714              7716           154
+215     PA              Marabá        9638              7454            56
+12      RO  Machadinho D'Oeste        8895              7100            37
+</code></pre></div>
+<p><code>car_quality()</code> desce ao imóvel. Mais adiante, este guia refaz a conta de um município
+passo a passo, para mostrar de onde os números vêm.</p>
+<h2 id="terras-indigenas-e-unidades-de-conservacao">Terras indígenas e unidades de conservação<a class="headerlink" href="#terras-indigenas-e-unidades-de-conservacao" title="Permanent link">&para;</a></h2>
+<p>O mesmo resumo traz quantos imóveis têm mais de 1% da área dentro de uma terra indígena
+(camada da Funai, em todas as fases do processo) ou de uma unidade de conservação
+(Cadastro Nacional de Unidades de Conservação, do MMA). Nas unidades de conservação o
+grupo importa: as de proteção integral, como parques e estações ecológicas, em regra não
+admitem imóveis privados; as de uso sustentável incluem as áreas de proteção ambiental
+(APA) e as reservas particulares (RPPN), onde a propriedade privada é normal.</p>
+<div class="highlight"><pre><span></span><code><span class="n">protected</span> <span class="o">=</span> <span class="n">quality</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"indigenous"</span><span class="p">,</span> <span class="s2">"strict_protection"</span><span class="p">,</span> <span class="s2">"sustainable_use"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">protected</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">order</span> <span class="o">=</span> <span class="n">protected</span><span class="p">[[</span><span class="s2">"indigenous"</span><span class="p">,</span> <span class="s2">"strict_protection"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">index</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">protected</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">order</span><span class="p">,</span> <span class="p">[</span><span class="s2">"indigenous"</span><span class="p">,</span> <span class="s2">"strict_protection"</span><span class="p">]]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"indigenous"</span><span class="p">:</span> <span class="s2">"Terra indígena"</span><span class="p">,</span> <span class="s2">"strict_protection"</span><span class="p">:</span> <span class="s2">"Proteção integral"</span><span class="p">}</span>
+<span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span><span class="n">stacked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">"#c2255c"</span><span class="p">,</span> <span class="s2">"#2b8a3e"</span><span class="p">],</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">6.4</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Imóveis do CAR sobre terra indígena ou unidade de proteção integral</span><span class="se">\n</span><span class="s2">"</span>
+             <span class="s2">"Imóveis não cancelados com mais de 1</span><span class="si">% d</span><span class="s2">a área dentro dessas áreas"</span><span class="p">,</span>
+             <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[[</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">]]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">(</span><span class="s2">"protegidas"</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="protegidas" src="../assets/protegidas.png" /></p>
+<p>Os municípios com mais casos, em cada tipo:</p>
+<div class="highlight"><pre><span></span><code><span class="n">quality</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"indigenous"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"state"</span><span class="p">,</span> <span class="s2">"municipality"</span><span class="p">,</span> <span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"indigenous"</span><span class="p">,</span> <span class="s2">"indigenous_ha"</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>     state         municipality  properties  indigenous  indigenous_ha
+1826    BA                Abaré        2167        1114        9996.96
+519     MA      Fernando Falcão        1291         658      640981.44
+1714    AL  Palmeira dos Índios        5745         481        4111.04
+2605    MG           Itacarambi        2458         448       26549.34
+532     MA               Grajaú        5508         370      106598.06
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">quality</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"strict_protection"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"state"</span><span class="p">,</span> <span class="s2">"municipality"</span><span class="p">,</span> <span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"strict_protection"</span><span class="p">,</span> <span class="s2">"strict_protection_ha"</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>     state   municipality  properties  strict_protection  strict_protection_ha
+2639    MG       Januária       12397               2377             263162.61
+16      RO    Porto Velho       23819               1773             359216.41
+2614    MG       Itamonte        1854               1384              29674.25
+89      AM       Canutama        2883               1313             685990.78
+3219    RJ  Nova Friburgo        3577               1287              32539.68
+</code></pre></div>
+<p>Por imóvel, <code>car_quality()</code> traz a parcela da área e o nome da terra indígena ou da
+unidade de conservação. É o que <code>car_check()</code> usa na triagem: um cadastro ativo passa de
+<code>"ok"</code> a <code>"attention"</code> quando mais de 1% da área está em terra indígena ou em unidade de
+proteção integral, e a nota diz qual.</p>
+<div class="highlight"><pre><span></span><code><span class="n">aguas_belas</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_quality</span><span class="p">(</span><span class="s2">"PE"</span><span class="p">,</span> <span class="n">municipality</span><span class="o">=</span><span class="s2">"Águas Belas"</span><span class="p">)</span>
+<span class="n">inside</span> <span class="o">=</span> <span class="n">aguas_belas</span><span class="p">[</span><span class="n">aguas_belas</span><span class="p">[</span><span class="s2">"indigenous_share"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">]</span>
+<span class="n">inside</span><span class="p">[[</span><span class="s2">"property_code"</span><span class="p">,</span> <span class="s2">"indigenous_share"</span><span class="p">,</span> <span class="s2">"indigenous_land"</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">check</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_check</span><span class="p">(</span><span class="n">inside</span><span class="p">[</span><span class="s2">"property_code"</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">check</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">check</span><span class="p">,</span> <span class="s2">"|"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">note</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>attention | Analisado, com notificação sem resposta do declarante. Sobrepõe terra indígena (Fulni-ô) em toda a área.
+attention | Analisado, com notificação sem resposta do declarante. Sobrepõe terra indígena (Fulni-ô) em toda a área.
+</code></pre></div>
+<p>O sinal vem de perímetros autodeclarados cruzados com limites oficiais, e não é uma
+conclusão sobre o imóvel: há terras indígenas ainda em estudo, e cadastros anteriores à
+criação de uma unidade de conservação.</p>
+<h2 id="o-perimetro-confere-com-o-incra">O perímetro confere com o Incra?<a class="headerlink" href="#o-perimetro-confere-com-o-incra" title="Permanent link">&para;</a></h2>
+<p>O CAR é declarado pelo próprio produtor. O Sigef, do Incra, guarda outra coisa:
+perímetros medidos por um profissional e aprovados. Cruzar os dois diz quanto do que foi
+declarado coincide com um georreferenciamento oficial. <code>sigef_share</code> é a parcela da área
+do imóvel coberta por parcelas particulares ou lotes de assentamento do Sigef.</p>
+<div class="highlight"><pre><span></span><code><span class="n">sigef</span> <span class="o">=</span> <span class="n">quality</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"state"</span><span class="p">)[[</span><span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"certified"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">sigef</span><span class="p">[</span><span class="s2">"share"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">sigef</span><span class="p">[</span><span class="s2">"certified"</span><span class="p">]</span> <span class="o">/</span> <span class="n">sigef</span><span class="p">[</span><span class="s2">"properties"</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sigef</span><span class="p">[[</span><span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"certified"</span><span class="p">]]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+
+<span class="n">sigef</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"share"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>properties    8405796
+certified     1825375
+       properties  certified  share
+state                              
+RR          27145      16539   60.9
+MT         206064     115460   56.0
+MS          88788      47114   53.1
+DF          20826      10476   50.3
+RO         188779      89265   47.3
+TO         103190      47595   46.1
+GO         242639     111804   46.1
+AP          16906       7530   44.5
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">coverage</span> <span class="o">=</span> <span class="n">ibge_mesh</span><span class="p">(</span><span class="s2">"paises/BR?intrarregiao=UF&amp;"</span><span class="p">)</span>
+<span class="n">coverage</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span> <span class="o">=</span> <span class="n">coverage</span><span class="p">[</span><span class="s2">"codarea"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">UFS</span><span class="p">)</span>
+<span class="n">coverage</span> <span class="o">=</span> <span class="n">coverage</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">sigef</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(),</span> <span class="n">on</span><span class="o">=</span><span class="s2">"state"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">coverage</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">"share"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"Blues"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"white"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+                   <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">6.4</span><span class="p">),</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">legend_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">"shrink"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Imóveis com metade ou mais da área no Sigef (%)"</span><span class="p">})</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Imóveis do CAR com perímetro georreferenciado no Incra"</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">(</span><span class="s2">"sigef"</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="sigef" src="../assets/sigef.png" /></p>
+<p>No Centro-Oeste e em parte da Amazônia, metade dos cadastros tem o perímetro conferido;
+no Nordeste, menos de um em cada dez. Dentro de um estado, a distribuição é de extremos:
+ou o imóvel não passou pelo Sigef, ou coincide quase todo.</p>
+<div class="highlight"><pre><span></span><code><span class="n">mt</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_quality</span><span class="p">(</span><span class="s2">"MT"</span><span class="p">)</span>
+<span class="n">classes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">mt</span><span class="p">[</span><span class="s2">"sigef_share"</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                 <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">"Fora do Sigef"</span><span class="p">,</span> <span class="s2">"De 1</span><span class="si">% a</span><span class="s2"> 50%"</span><span class="p">,</span> <span class="s2">"De 50</span><span class="si">% a</span><span class="s2"> 95%"</span><span class="p">,</span> <span class="s2">"Mais de 95%"</span><span class="p">])</span>
+<span class="n">share</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">classes</span><span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">mt</span><span class="p">))</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">ax</span> <span class="o">=</span> <span class="n">share</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#1864ab"</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Mato Grosso: quanto de cada imóvel do CAR está no Sigef"</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"</span><span class="si">% d</span><span class="s2">os imóveis não cancelados"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[[</span><span class="s2">"top"</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">]]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">(</span><span class="s2">"sigef-classes"</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="sigef-classes" src="../assets/sigef-classes.png" /></p>
+<p>Um imóvel entre 1% e 95% merece atenção: o CAR e o Sigef discordam sobre onde ele fica.
+As glebas públicas, as unidades de conservação e as terras indígenas que também estão no
+Sigef não entram nessa conta.</p>
+<h2 id="o-codigo-diz-um-municipio-o-cadastro-diz-outro">O código diz um município, o cadastro diz outro<a class="headerlink" href="#o-codigo-diz-um-municipio-o-cadastro-diz-outro" title="Permanent link">&para;</a></h2>
+<p>O código do imóvel traz o município em que ele foi registrado (<code>UF-0000000-…</code>). Em
+Pernambuco, comparando com a coluna <code>municipality_code</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">moved</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_tbl</span><span class="p">(</span><span class="s2">"PE"</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="s2">"substr(property_code, 4, 7) &lt;&gt; municipality_code::VARCHAR"</span>
+<span class="p">)</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="s2">"property_code, municipality, area_ha"</span><span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">moved</span><span class="p">),</span> <span class="s2">"imóveis"</span><span class="p">)</span>
+
+<span class="n">moved</span><span class="p">[</span><span class="s2">"municipality"</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>1138 imóveis
+municipality
+Araripina    106
+Trindade     102
+Pedra         79
+Itaíba        47
+Itapetim      25
+Ouricuri      25
+Name: count, dtype: int64
+</code></pre></div>
+<p>Nem todo caso é erro — imóveis mudam de município quando a base municipal é
+atualizada —, mas é uma lista curta para conferir.</p>
+<h2 id="mais-area-declarada-do-que-territorio">Mais área declarada do que território<a class="headerlink" href="#mais-area-declarada-do-que-territorio" title="Permanent link">&para;</a></h2>
+<p>Somando a área declarada dos imóveis de cada município e dividindo pela área do
+município na malha do IBGE, o resultado não deveria passar de 1. Passa em vários.</p>
+<div class="highlight"><pre><span></span><code><span class="n">mesh</span> <span class="o">=</span> <span class="n">ibge_mesh</span><span class="p">(</span><span class="s2">"estados/PE?intrarregiao=municipio&amp;"</span><span class="p">)</span>
+<span class="n">mesh</span><span class="p">[</span><span class="s2">"municipality_code"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">[</span><span class="s2">"codarea"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">mesh</span><span class="p">[</span><span class="s2">"territory_ha"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="mi">6933</span><span class="p">)</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1e4</span>  <span class="c1"># projeção de área igual</span>
+
+<span class="n">ratio</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">carbr</span><span class="o">.</span><span class="n">car_municipalities</span><span class="p">(</span><span class="s2">"PE"</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="s2">"municipality_code"</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="n">ratio</span><span class="p">[</span><span class="s2">"ratio"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ratio</span><span class="p">[</span><span class="s2">"area_ha"</span><span class="p">]</span> <span class="o">/</span> <span class="n">ratio</span><span class="p">[</span><span class="s2">"territory_ha"</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">((</span><span class="n">ratio</span><span class="p">[</span><span class="s2">"ratio"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="s2">"de"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratio</span><span class="p">),</span> <span class="s2">"municípios com mais área declarada que território"</span><span class="p">)</span>
+
+<span class="n">ratio</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"ratio"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"municipality"</span><span class="p">,</span> <span class="s2">"properties"</span><span class="p">,</span> <span class="s2">"area_ha"</span><span class="p">,</span> <span class="s2">"territory_ha"</span><span class="p">,</span> <span class="s2">"ratio"</span><span class="p">]</span>
+<span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>36 de 185 municípios com mais área declarada que território
+    municipality  properties   area_ha  territory_ha  ratio
+46       Catende      1289.0  42584.42      20749.68   2.05
+88      Jaqueira      1203.0  16282.03       8736.33   1.86
+134  Rio Formoso       776.0  37161.96      22835.97   1.63
+52        Cortês       756.0  14886.64      10283.63   1.45
+128    Primavera       620.0  16194.58      11197.19   1.45
+133     Ribeirão       799.0  39828.67      29096.37   1.37
+</code></pre></div>
+<p>A concentração na Zona da Mata sugere sobreposição sistemática entre imóveis, não
+erro isolado.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundaryNorm</span><span class="p">,</span> <span class="n">ListedColormap</span>
+
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">ListedColormap</span><span class="p">([</span><span class="s2">"#e8f1e4"</span><span class="p">,</span> <span class="s2">"#b7d3ad"</span><span class="p">,</span> <span class="s2">"#7fae78"</span><span class="p">,</span> <span class="s2">"#f08c4a"</span><span class="p">,</span> <span class="s2">"#c92a2a"</span><span class="p">])</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="n">BoundaryNorm</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">ratio</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="s2">"ratio"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"white"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">3.6</span><span class="p">),</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">legend_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">"shrink"</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span> <span class="s2">"ticks"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span>
+                             <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"Área declarada / área do município"</span><span class="p">},</span>
+                <span class="n">missing_kwds</span><span class="o">=</span><span class="p">{</span><span class="s2">"color"</span><span class="p">:</span> <span class="s2">"#d9d9d9"</span><span class="p">})</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">41.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">34.8</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">9.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">7.25</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Onde o CAR declara mais área do que o município tem"</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">(</span><span class="s2">"razao"</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="razao" src="../assets/razao.png" /></p>
+<h2 id="dentro-de-um-municipio-petrolina">Dentro de um município: Petrolina<a class="headerlink" href="#dentro-de-um-municipio-petrolina" title="Permanent link">&para;</a></h2>
+<p>Com os perímetros, dá para ir ao detalhe. Os imóveis não cancelados de Petrolina e o
+limite do município, em coordenadas planas para medir em hectares:</p>
+<div class="highlight"><pre><span></span><code><span class="n">petrolina</span> <span class="o">=</span> <span class="n">carbr</span><span class="o">.</span><span class="n">car_properties</span><span class="p">(</span><span class="s2">"PE"</span><span class="p">,</span> <span class="n">municipality</span><span class="o">=</span><span class="s2">"Petrolina"</span><span class="p">)</span>
+<span class="n">petrolina</span> <span class="o">=</span> <span class="n">petrolina</span><span class="p">[(</span><span class="n">petrolina</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">"cancelled"</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">petrolina</span><span class="p">[</span><span class="s2">"geometry_valid"</span><span class="p">]]</span>
+<span class="n">utm</span> <span class="o">=</span> <span class="n">petrolina</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="mi">31984</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">boundary</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">[</span><span class="n">mesh</span><span class="p">[</span><span class="s2">"codarea"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"2611101"</span><span class="p">]</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="mi">31984</span><span class="p">)</span>
+
+<span class="nb">len</span><span class="p">(</span><span class="n">utm</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>10849
+</code></pre></div>
+<h3 id="imoveis-fora-do-municipio">Imóveis fora do município<a class="headerlink" href="#imoveis-fora-do-municipio" title="Permanent link">&para;</a></h3>
+<p>Recortando cada imóvel pelo limite do município, sai a parcela da área que fica do
+lado de fora. Faixas estreitas na divisa são esperadas, porque o traçado do IBGE e o
+do declarante nunca coincidem; o sinal é o imóvel com mais da metade da área fora.</p>
+<div class="highlight"><pre><span></span><code><span class="n">inside_ha</span> <span class="o">=</span> <span class="n">utm</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">boundary</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1e4</span>
+<span class="n">utm</span><span class="p">[</span><span class="s2">"geometry_ha"</span><span class="p">]</span> <span class="o">=</span> <span class="n">utm</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1e4</span>
+<span class="n">utm</span><span class="p">[</span><span class="s2">"outside"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">inside_ha</span> <span class="o">/</span> <span class="n">utm</span><span class="p">[</span><span class="s2">"geometry_ha"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">utm</span><span class="p">[</span><span class="s2">"outside"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="s2">"imóveis,"</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">utm</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">utm</span><span class="p">[</span><span class="s2">"outside"</span><span class="p">],</span> <span class="s2">"area_ha"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="s2">"hectares"</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>90 imóveis, 3359 hectares
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">ax</span> <span class="o">=</span> <span class="n">boundary</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#f4f8f1"</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"#123a23"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="n">utm</span><span class="p">[</span><span class="o">~</span><span class="n">utm</span><span class="p">[</span><span class="s2">"outside"</span><span class="p">]]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#8fbf9f"</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">utm</span><span class="p">[</span><span class="n">utm</span><span class="p">[</span><span class="s2">"outside"</span><span class="p">]]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"#c92a2a"</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"#c92a2a"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Imóveis registrados em Petrolina que ficam fora do município</span><span class="se">\n</span><span class="s2">"</span>
+             <span class="s2">"Em vermelho, os que têm mais da metade da área fora do limite do IBGE"</span><span class="p">,</span>
+             <span class="n">loc</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">(</span><span class="s2">"fora"</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="fora" src="../assets/fora.png" /></p>
+<h3 id="sobreposicoes">Sobreposições<a class="headerlink" href="#sobreposicoes" title="Permanent link">&para;</a></h3>
+<p>Uma junção espacial do conjunto com ele mesmo, com o predicado <code>overlaps</code>, aponta
+para cada imóvel os outros com que ele divide área (tocar na divisa não conta).</p>
+<div class="highlight"><pre><span></span><code><span class="n">pairs</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">sjoin</span><span class="p">(</span><span class="n">utm</span><span class="p">[[</span><span class="s2">"property_code"</span><span class="p">,</span> <span class="s2">"geometry"</span><span class="p">]],</span> <span class="n">utm</span><span class="p">[[</span><span class="s2">"geometry"</span><span class="p">]],</span> <span class="n">predicate</span><span class="o">=</span><span class="s2">"overlaps"</span><span class="p">)</span>
+<span class="n">utm</span><span class="p">[</span><span class="s2">"neighbours"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pairs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">utm</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">summed_ha</span> <span class="o">=</span> <span class="n">utm</span><span class="p">[</span><span class="s2">"geometry_ha"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">covered_ha</span> <span class="o">=</span> <span class="n">utm</span><span class="o">.</span><span class="n">union_all</span><span class="p">()</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mf">1e4</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="p">(</span><span class="n">utm</span><span class="p">[</span><span class="s1">'neighbours'</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2"> de </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">utm</span><span class="p">)</span><span class="si">}</span><span class="s2"> imóveis sobrepõem ao menos um vizinho"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"soma das áreas: </span><span class="si">{</span><span class="n">summed_ha</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> ha; área coberta: </span><span class="si">{</span><span class="n">covered_ha</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> ha; "</span>
+      <span class="sa">f</span><span class="s2">"contado em dobro: </span><span class="si">{</span><span class="n">summed_ha</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">covered_ha</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> ha"</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>8462 de 10849 imóveis sobrepõem ao menos um vizinho
+soma das áreas: 408603 ha; área coberta: 367152 ha; contado em dobro: 41451 ha
+</code></pre></div>
+<p>A maioria das sobreposições são faixas estreitas na divisa. Os casos que mais pesam
+são poucos:</p>
+<div class="highlight"><pre><span></span><code><span class="n">utm</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"neighbours"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span>
+    <span class="p">[</span><span class="s2">"property_code"</span><span class="p">,</span> <span class="s2">"area_ha"</span><span class="p">,</span> <span class="s2">"fiscal_modules"</span><span class="p">,</span> <span class="s2">"size_class"</span><span class="p">,</span> <span class="s2">"neighbours"</span><span class="p">]</span>
+<span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>                                    property_code     area_ha  fiscal_modules size_class  \
+2070  PE-2611101-588BC484570D440484F527F07DF5AFFA  81578.6042          0.5209      small   
+3526  PE-2611101-5316F05D569C41C4847C52AF2C7E5CCB   6647.5275          0.6230      small   
+3682  PE-2611101-5149DB80F9E54FDDB445BDC40DF501AF    360.5831          6.5561     medium   
+5330  PE-2611101-0B75BD9F97224B73A761792FC4095A9C    305.9185          5.5622     medium   
+38    PE-2611101-961DA0E4B2FA4FA6BA6601588C06310A    143.0881          2.5394      small   
+5329  PE-2611101-CB1BE273577643AD9BC07FB09008FB34    305.8473          5.5609     medium   
+
+      neighbours  
+2070         325  
+3526          49  
+3682          41  
+5330          40  
+38            26  
+5329          26
+</code></pre></div>
+<h3 id="pequeno-nem-sempre-e-pequeno">"Pequeno" nem sempre é pequeno<a class="headerlink" href="#pequeno-nem-sempre-e-pequeno" title="Permanent link">&para;</a></h3>
+<p>O porte (<code>size_class</code>) vem dos módulos fiscais informados pelo Sicar, não da área. Em
+assentamentos e territórios de povos e comunidades tradicionais, um único cadastro
+cobre muitas famílias, e um perímetro de milhares de hectares aparece com menos de
+quatro módulos. Em Pernambuco, os imóveis "pequenos" com mais de 440 hectares — quatro
+vezes o maior módulo fiscal do país:</p>
+<div class="highlight"><pre><span></span><code><span class="n">carbr</span><span class="o">.</span><span class="n">car_tbl</span><span class="p">(</span><span class="s2">"PE"</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">"size_class = 'small' AND area_ha &gt; 440"</span><span class="p">)</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span>
+    <span class="s2">"property_type, count(*) AS properties, round(sum(area_ha)) AS area_ha"</span>
+<span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>           property_type  properties   area_ha
+0  traditional_community          65  164138.0
+1         rural_property           1     926.0
+2             settlement         432  651693.0
+</code></pre></div>
+<p>Quem conta "pequenos produtores" pelo porte deve separar o tipo do imóvel
+(<code>property_type</code>) antes.</p>
+<h2 id="o-que-fazer-com-isso">O que fazer com isso<a class="headerlink" href="#o-que-fazer-com-isso" title="Permanent link">&para;</a></h2>
+<p>Cada sinal acima vira uma lista de imóveis: <code>property_code</code> leva ao cadastro, e
+<code>car_property()</code> devolve o perímetro. Para repetir a análise em outro município ou
+outra UF, basta trocar os argumentos.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Código MIT · Dados do Sicar, Serviço Florestal Brasileiro
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "content.code.copy", "search.highlight"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "mais 1 nesta p\u00e1gina", "search.result.more.other": "# mais nesta p\u00e1gina", "search.result.none": "Nenhum documento encontrado", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
