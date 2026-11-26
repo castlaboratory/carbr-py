@@ -402,7 +402,8 @@ def _verdict(row) -> tuple[str, str]:
 def _check_quality(uf: str, part: pd.DataFrame) -> pd.DataFrame:
     """Sobreposição com áreas protegidas dos imóveis de `part` (vazio se a publicação não traz)."""
     columns = ["property_code", "indigenous_share", "strict_protection_share", "sustainable_use_share",
-               "indigenous_land", "conservation_unit", "conservation_category", "embargo_count", "embargo_share"]
+               "indigenous_land", "conservation_unit", "conservation_category", "embargo_count", "embargo_share",
+               "public_forest_share"]
     if not len(part):
         return pd.DataFrame(columns=columns)
     with warnings.catch_warnings():
@@ -412,7 +413,7 @@ def _check_quality(uf: str, part: pd.DataFrame) -> pd.DataFrame:
 
 
 _PROTECTED = ["indigenous_share", "strict_protection_share", "sustainable_use_share", "protected_area",
-              "embargo_count", "embargo_share"]
+              "embargo_count", "embargo_share", "public_forest_share"]
 _SHARE_MIN = 0.01       # abaixo de 1% da área, a sobreposição é ruído de limite
 
 
@@ -446,7 +447,10 @@ def _protected(row, check: str, note: str) -> tuple[str, str, str | None]:
         extra.append(("Há 1 embargo ambiental ativo do Ibama" if embargoes == 1
                       else f"Há {embargoes} embargos ambientais ativos do Ibama")
                      + (f", sobre {_percent(covered)}." if covered >= _SHARE_MIN else " no imóvel."))
-    alert = ti >= _SHARE_MIN or strict >= _SHARE_MIN or embargoes > 0
+    forest = share("public_forest_share")
+    if forest >= _SHARE_MIN:
+        extra.append(f"Sobrepõe floresta pública não destinada (tipo B) em {_percent(forest)}.")
+    alert = ti >= _SHARE_MIN or strict >= _SHARE_MIN or embargoes > 0 or forest >= _SHARE_MIN
     if alert and check == "ok":
         check, note = "attention", ""
     area = "; ".join(str(n) for n in names if isinstance(n, str)) or None
@@ -467,8 +471,8 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
     - ``"ok"``: cadastro ativo, sem notificação pendente;
     - ``"attention"``: cadastro pendente, analisado com notificação ainda
       sem resposta do declarante, com mais de 1% da área sobre terra
-      indígena ou unidade de conservação de proteção integral, ou com
-      embargo ambiental ativo do Ibama;
+      indígena, unidade de conservação de proteção integral ou floresta
+      pública não destinada, ou com embargo ambiental ativo do Ibama;
     - ``"blocked"``: cadastro cancelado ou suspenso;
     - ``"not_found"``: código que não está na publicação (pode ter sido
       cadastrado depois da última atualização);
@@ -481,10 +485,11 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
     imóveis privados. Os embargos são os do Ibama (dados abertos, termos
     não cancelados e sem desembargo), localizados pelo polígono ou pelo
     ponto do termo; não entram embargos estaduais nem do ICMBio. A
-    verificação não cobre os demais impedimentos do crédito rural
-    (territórios quilombolas, florestas públicas não destinadas, supressão
-    de vegetação, trabalho análogo à escravidão) e não substitui a
-    consulta oficial ao Sicar.
+    As florestas públicas não destinadas ("tipo B") são as do Cadastro
+    Nacional de Florestas Públicas. A verificação não cobre os demais
+    impedimentos do crédito rural (territórios quilombolas, supressão de
+    vegetação, trabalho análogo à escravidão) e não substitui a consulta
+    oficial ao Sicar.
 
     Parameters
     ----------
@@ -503,7 +508,7 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
         ``indigenous_share``, ``strict_protection_share``,
         ``sustainable_use_share`` (parcelas da área, de 0 a 1),
         ``protected_area`` (os nomes das áreas sobrepostas),
-        ``embargo_count`` e ``embargo_share``.
+        ``embargo_count``, ``embargo_share`` e ``public_forest_share``.
     """
     codes = list(dict.fromkeys(str(c).strip().upper() for c in _as_list(code) if str(c).strip()))
     columns = ["property_code", "status", "condition", "property_type", "size_class",
@@ -557,11 +562,12 @@ def car_check(code: str | Iterable[str]) -> pd.DataFrame:
 _QUALITY = ["property_code", "municipality_code", "overlap_count", "overlap_share", "outside_share",
             "indigenous_share", "strict_protection_share", "sustainable_use_share",
             "indigenous_land", "conservation_unit", "conservation_category",
-            "embargo_count", "embargo_share"]
+            "embargo_count", "embargo_share", "public_forest_share"]
 _QUALITY_SUMMARY = ["state", "municipality_code", "municipality", "properties", "overlapping",
                     "overlapping_half", "overlap_ha", "outside_half", "outside_ha",
                     "indigenous", "indigenous_ha", "strict_protection", "strict_protection_ha",
-                    "sustainable_use", "sustainable_use_ha", "embargoed", "embargo_ha"]
+                    "sustainable_use", "sustainable_use_ha", "embargoed", "embargo_ha",
+                    "public_forest", "public_forest_ha"]
 
 
 def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
@@ -582,7 +588,9 @@ def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
       ``conservation_category`` (a de proteção integral, se houver);
     - ``embargo_count`` e ``embargo_share``: quantos embargos ambientais ativos do Ibama
       alcançam o imóvel e que parcela da área está embargada (só os termos que têm o
-      polígono da área; os demais contam pelo ponto de referência).
+      polígono da área; os demais contam pelo ponto de referência);
+    - ``public_forest_share``: que parcela fica dentro de florestas públicas não destinadas
+      ("tipo B"), pelo Cadastro Nacional de Florestas Públicas, do Serviço Florestal.
 
     Sobreposição entre imóveis não é sinônimo de disputa: inclui imóvel declarado duas
     vezes e lote dentro de assentamento; a comparação é só entre imóveis do mesmo
@@ -636,7 +644,9 @@ def car_quality_summary(state: str | Iterable[str] | None = None) -> pd.DataFram
     E, para terras indígenas (``indigenous``), unidades de proteção integral
     (``strict_protection``) e de uso sustentável (``sustainable_use``), quantos imóveis
     têm mais de 1% da área dentro delas e quantos hectares (``*_ha``); e quantos imóveis
-    têm embargo ativo do Ibama (``embargoed``) e os hectares embargados (``embargo_ha``).
+    têm embargo ativo do Ibama (``embargoed``) e os hectares embargados (``embargo_ha``); e
+    quantos têm mais de 1% da área em floresta pública tipo B (``public_forest``,
+    ``public_forest_ha``).
     Arquivos pequenos, guardados em cache.
 
     Parameters
