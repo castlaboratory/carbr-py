@@ -74,7 +74,7 @@ by_state.sort_values("share_overlapping", ascending=False).head(10)
 state                                                                              
 DF          20826             15830            10               76.0           0.05
 AC          57680             36265           294               62.9           0.51
-RR          27139             16801           215               61.9           0.79
+RR          27145             16807           215               61.9           0.79
 AP          16906              9983           192               59.1           1.14
 MA         414258            238954          8819               57.7           2.13
 MT         206064             97781          3397               47.5           1.65
@@ -215,6 +215,77 @@ attention | Analisado, com notificação sem resposta do declarante. Sobrepõe t
 O sinal vem de perímetros autodeclarados cruzados com limites oficiais, e não é uma
 conclusão sobre o imóvel: há terras indígenas ainda em estudo, e cadastros anteriores à
 criação de uma unidade de conservação.
+
+## O perímetro confere com o Incra?
+
+O CAR é declarado pelo próprio produtor. O Sigef, do Incra, guarda outra coisa:
+perímetros medidos por um profissional e aprovados. Cruzar os dois diz quanto do que foi
+declarado coincide com um georreferenciamento oficial. `sigef_share` é a parcela da área
+do imóvel coberta por parcelas particulares ou lotes de assentamento do Sigef.
+
+```python
+sigef = quality.groupby("state")[["properties", "certified"]].sum()
+sigef["share"] = (100 * sigef["certified"] / sigef["properties"]).round(1)
+print(sigef[["properties", "certified"]].sum().to_string())
+
+sigef.sort_values("share", ascending=False).head(8)
+```
+
+```text
+properties    8405796
+certified     1825375
+       properties  certified  share
+state                              
+RR          27145      16539   60.9
+MT         206064     115460   56.0
+MS          88788      47114   53.1
+DF          20826      10476   50.3
+RO         188779      89265   47.3
+TO         103190      47595   46.1
+GO         242639     111804   46.1
+AP          16906       7530   44.5
+```
+
+```python
+coverage = ibge_mesh("paises/BR?intrarregiao=UF&")
+coverage["state"] = coverage["codarea"].map(UFS)
+coverage = coverage.merge(sigef.reset_index(), on="state", how="left")
+
+ax = coverage.plot(column="share", cmap="Blues", vmin=0, edgecolor="white", linewidth=0.3,
+                   figsize=(7, 6.4), legend=True,
+                   legend_kwds={"shrink": 0.5, "label": "Imóveis com metade ou mais da área no Sigef (%)"})
+ax.set_title("Imóveis do CAR com perímetro georreferenciado no Incra", loc="left")
+ax.set_axis_off()
+
+fig("sigef")
+```
+
+![sigef](assets/sigef.png)
+
+No Centro-Oeste e em parte da Amazônia, metade dos cadastros tem o perímetro conferido;
+no Nordeste, menos de um em cada dez. Dentro de um estado, a distribuição é de extremos:
+ou o imóvel não passou pelo Sigef, ou coincide quase todo.
+
+```python
+mt = carbr.car_quality("MT")
+classes = pd.cut(mt["sigef_share"], [-1, 0.01, 0.5, 0.95, 2],
+                 labels=["Fora do Sigef", "De 1% a 50%", "De 50% a 95%", "Mais de 95%"])
+share = (100 * classes.value_counts(sort=False) / len(mt)).round(1)
+
+ax = share.plot.barh(color="#1864ab", figsize=(7, 2.8), width=0.7)
+ax.set_title("Mato Grosso: quanto de cada imóvel do CAR está no Sigef", loc="left", fontsize=10)
+ax.set_xlabel("% dos imóveis não cancelados")
+ax.set_ylabel("")
+ax.spines[["top", "right"]].set_visible(False)
+
+fig("sigef-classes")
+```
+
+![sigef-classes](assets/sigef-classes.png)
+
+Um imóvel entre 1% e 95% merece atenção: o CAR e o Sigef discordam sobre onde ele fica.
+As glebas públicas, as unidades de conservação e as terras indígenas que também estão no
+Sigef não entram nessa conta.
 
 ## O código diz um município, o cadastro diz outro
 
@@ -412,9 +483,9 @@ carbr.car_tbl("PE").filter("size_class = 'small' AND area_ha > 440").aggregate(
 
 ```text
            property_type  properties   area_ha
-0         rural_property           1     926.0
-1             settlement         432  651693.0
-2  traditional_community          65  164138.0
+0  traditional_community          65  164138.0
+1         rural_property           1     926.0
+2             settlement         432  651693.0
 ```
 
 Quem conta "pequenos produtores" pelo porte deve separar o tipo do imóvel

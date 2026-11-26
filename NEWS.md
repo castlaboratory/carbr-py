@@ -1,5 +1,10 @@
 # Novidades
 
+## Em desenvolvimento
+
+- Documentação: guia novo, "Triagem para crédito e conformidade", e seção sobre o Sigef no guia de
+  inconsistências.
+
 ## 0.7.0
 
 - `car_check()` passa a apontar embargos ambientais ativos do Ibama (`embargo_count`, `embargo_share`), que

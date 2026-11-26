@@ -51,7 +51,9 @@ carbr.car_properties("PE", status="pending", geometry=False)
 
 carbr.car_at(lon=-40.5, lat=-9.2)         # que imóveis estão declarados neste ponto?
 carbr.car_property("PE-2611101-588BC484570D440484F527F07DF5AFFA")
-carbr.car_check(codigos)                  # triagem de uma lista de códigos
+carbr.car_check(codigos)                  # triagem: situação, áreas protegidas, embargos, florestas públicas
+carbr.car_quality_summary()               # indicadores por município, o país inteiro
+carbr.car_typology()                      # o perfil de cada município
 
 # Qualquer outra consulta, direto no arquivo remoto
 carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
@@ -60,8 +62,9 @@ carbr.car_tbl("PE").aggregate("status, size_class, count(*) AS n").df()
 ## Guias
 
 - [Primeiros passos](primeiros-passos.md)
-- [Inconsistências do cadastro](inconsistencias.md): sobreposições, imóveis fora do município, área declarada maior que o território.
-- [Onde a análise está parada](fila-da-analise.md): as etapas da análise por UF e quem aguarda resposta à notificação.
+- [Inconsistências do cadastro](inconsistencias.md): sobreposições entre imóveis, terras indígenas e unidades de conservação, o confronto com o Sigef do Incra e a área declarada maior que o território.
+- [Onde a análise está parada](fila-da-analise.md): as etapas da análise por UF, quem aguarda resposta à notificação e a tipologia dos municípios.
+- [Triagem para crédito e conformidade](triagem.md): a conferência em lote dos impedimentos do crédito rural, com os mapas de embargos e de florestas públicas.
 
 ## Assistentes
 
