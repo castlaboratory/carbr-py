@@ -83,6 +83,9 @@ def release(tmp_path):
         "indigenous_land": [None, "Terra Teste", None, None, None],
         "conservation_unit": [None, None, "Parque Teste", "APA Teste", None],
         "conservation_category": [None, None, "Parque", "Área de Proteção Ambiental", None],
+        # O imóvel de Recife (o último aqui) tem dois embargos do Ibama, sobre 40% da área.
+        "embargo_count": [0, 0, 0, 0, 2],
+        "embargo_share": [0.0, 0.0, 0.0, 0.0, 0.4],
     })
     (tmp_path / "quality").mkdir()
     (tmp_path / "quality-municipalities").mkdir()
@@ -101,7 +104,9 @@ def release(tmp_path):
                 count(*) FILTER (strict_protection_share > 0.01) AS strict_protection,
                 sum(p.area_ha * strict_protection_share) AS strict_protection_ha,
                 count(*) FILTER (sustainable_use_share > 0.01) AS sustainable_use,
-                sum(p.area_ha * sustainable_use_share) AS sustainable_use_ha
+                sum(p.area_ha * sustainable_use_share) AS sustainable_use_ha,
+                count(*) FILTER (embargo_count > 0) AS embargoed,
+                sum(p.area_ha * embargo_share) AS embargo_ha
               FROM quality q JOIN props p USING (property_code) GROUP BY ALL) TO '{f_qm}' (FORMAT parquet)""")
     (tmp_path / "typology").mkdir()
     f_typ = tmp_path / "typology" / "municipalities.parquet"

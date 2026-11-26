@@ -61,6 +61,8 @@ Ao responder com estes dados:
   `strict_protection_share` e `sustainable_use_share`, dentro de unidades de conservação de
   proteção integral e de uso sustentável (CNUC/MMA). Uso sustentável não é irregularidade: áreas
   de proteção ambiental (APA) e reservas particulares (RPPN) admitem imóveis privados.
+- Embargos: `embargo_count` é o número de embargos ambientais ativos do Ibama que alcançam o
+  imóvel e `embargo_share`, a parcela da área embargada. Só Ibama; não há embargos estaduais.
 - Tipologia (`tipologia`, em `municipio`): o grupo do município entre cinco, pelo perfil do
   cadastro (porte dos imóveis, etapa da análise e sobreposição); `typology_label` é o nome do
   grupo e os indicadores são parcelas de 0 a 1 (`coverage` é a área declarada sobre a área do
@@ -211,7 +213,7 @@ def _town_quality(uf: str, code: int) -> dict[str, Any] | None:
 
 
 _AREAS = ["indigenous_share", "strict_protection_share", "sustainable_use_share",
-          "indigenous_land", "conservation_unit", "conservation_category"]
+          "indigenous_land", "conservation_unit", "conservation_category", "embargo_count", "embargo_share"]
 
 
 def _property_quality(df: pd.DataFrame) -> pd.DataFrame:
@@ -247,10 +249,11 @@ def verificar_imoveis(codigos: list[str]) -> dict[str, Any]:
 
     Para cada código: o que consta na camada pública e um resultado (`check`): ok
     (ativo, sem notificação pendente), attention (pendente, notificado sem resposta, ou com
-    mais de 1% da área sobre terra indígena ou unidade de conservação de proteção integral),
+    mais de 1% da área sobre terra indígena ou unidade de conservação de proteção integral, ou
+    com embargo ambiental ativo do Ibama),
     blocked (cancelado ou suspenso), not_found, invalid. `note` traz o motivo e
     `protected_area`, os nomes das áreas sobrepostas. A classificação é do carbr, não uma
-    regra oficial, e não cobre embargos.
+    regra oficial.
     """
     if len(codigos) > MAX_ROWS:
         raise ValueError(f"No máximo {MAX_ROWS} códigos por chamada; divida a lista.")

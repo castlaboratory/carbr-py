@@ -2,6 +2,8 @@
 
 ## Em desenvolvimento
 
+- `car_check()` passa a apontar embargos ambientais ativos do Ibama (`embargo_count`, `embargo_share`), que
+  levam o resultado a `"attention"`; `car_quality()` e `car_quality_summary()` trazem as colunas novas.
 - Servidor MCP: `municipio` passa a trazer o grupo do município na tipologia.
 
 ## 0.6.0
