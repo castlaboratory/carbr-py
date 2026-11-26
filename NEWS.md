@@ -1,6 +1,6 @@
 # Novidades
 
-## Em desenvolvimento
+## 0.7.1
 
 - Documentação: guia novo, "Triagem para crédito e conformidade", e seção sobre o Sigef no guia de
   inconsistências.
