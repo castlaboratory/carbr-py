@@ -602,8 +602,10 @@ def car_quality(state: str | Iterable[str], municipality=None) -> pd.DataFrame:
     - ``public_forest_share``: que parcela fica dentro de florestas públicas não destinadas
       ("tipo B"), pelo Cadastro Nacional de Florestas Públicas, do Serviço Florestal;
     - ``sigef_count`` e ``sigef_share``: quantas parcelas georreferenciadas no Sigef (Incra)
-      o imóvel alcança e que parcela da área elas cobrem. Perto de 1 quer dizer que o
-      perímetro declarado no CAR coincide com um georreferenciamento aprovado pelo Incra;
+      o imóvel alcança e que parcela da área elas cobrem, contando só parcelas particulares
+      e lotes de assentamento (glebas públicas e áreas protegidas, que também estão no
+      Sigef, ficam de fora). Perto de 1 quer dizer que o perímetro declarado no CAR
+      coincide com um georreferenciamento aprovado pelo Incra;
     - ``quilombola_share`` e ``settlement_share``: que parcela cai em parcelas do Sigef cuja
       natureza é território quilombola ou assentamento. **A cobertura é parcial**: só os
       territórios já georreferenciados no Sigef; a camada completa de territórios

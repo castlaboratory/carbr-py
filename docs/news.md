@@ -1,6 +1,6 @@
 # Novidades
 
-## Em desenvolvimento
+## 0.7.0
 
 - `car_check()` passa a apontar embargos ambientais ativos do Ibama (`embargo_count`, `embargo_share`), que
   levam o resultado a `"attention"`; `car_quality()` e `car_quality_summary()` trazem as colunas novas.
